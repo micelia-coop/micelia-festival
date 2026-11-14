@@ -22,7 +22,7 @@ export default function Inicio() {
           <h1 className="text-5xl font-bold leading-none sm:text-6xl">{f.nombre}</h1>
           <p className="max-w-xl text-lg text-crema/90">{f.bajada}</p>
           <div className="space-y-1 text-lg">
-            <p>📅 <strong className="capitalize">{fechaLarga(diaLocal(f.fecha))}</strong></p>
+            <p>📅 <strong className="first-letter:uppercase">{fechaLarga(diaLocal(f.fecha))}</strong></p>
             <p>📍 {f.lugar ? <strong>{f.lugar}</strong> : <span>Lugar a confirmar</span>}</p>
           </div>
           <CuentaRegresiva hasta={f.inicio_manana ?? `${f.fecha}T08:00:00-03:00`} />

@@ -31,7 +31,7 @@ export default function MiEntrada() {
     <div className="mx-auto max-w-md space-y-5 text-center">
       <div className="rounded-[2rem] bg-bosque p-6 text-crema">
         <p className="font-bold uppercase tracking-widest text-tierra">{config.festival.nombre}</p>
-        <p className="capitalize">{fechaLarga(diaLocal(config.festival.fecha))}</p>
+        <p className="first-letter:uppercase">{fechaLarga(diaLocal(config.festival.fecha))}</p>
         <h1 className="mt-2 text-3xl font-bold">{e.titular_nombre}</h1>
         <p className="text-lg font-bold text-tierra">{e.tipo.nombre}</p>
         <div className="mt-4 flex justify-center"><QrCode valor={`${origen()}/e/${e.token}`} apagado={!e.activa || anulada} /></div>
