@@ -1,0 +1,102 @@
+import { useEffect, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { DatosComprador, MetodoPago } from '../../components/Checkout'
+import { Alerta, Button, Card, Spinner, Titulo } from '../../components/ui'
+import { useConfig } from '../../lib/config'
+import { pesos } from '../../lib/format'
+import { rpc } from '../../lib/supabase'
+import type { TipoEntrada } from '../../lib/types'
+
+const ACENTO: Record<number, string> = { 1: 'var(--color-tierra)', 2: 'var(--color-arcilla)' }
+
+export default function Entradas() {
+  const { config } = useConfig()
+  const nav = useNavigate()
+  const [tipos, setTipos] = useState<TipoEntrada[] | null>(null)
+  const [cant, setCant] = useState<Record<string, number>>({})
+  const [metodo, setMetodo] = useState<'transferencia' | 'efectivo'>('transferencia')
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
+  const abiertas = config.ventas.entradas_abiertas === true
+
+  useEffect(() => { rpc<TipoEntrada[]>('tipos_entrada_disponibles').then(setTipos).catch((e) => setError(e.message)) }, [])
+
+  const total = (tipos ?? []).reduce((s, t) => s + (cant[t.id] ?? 0) * t.precio, 0)
+  const nTotal = Object.values(cant).reduce((a, b) => a + b, 0)
+
+  const cambiar = (t: TipoEntrada, d: number) => setCant((c) => {
+    const max = Math.min(10, t.restantes ?? 10)
+    return { ...c, [t.id]: Math.max(0, Math.min(max, (c[t.id] ?? 0) + d)) }
+  })
+
+  async function comprar(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!nTotal) { setError('Elegí al menos una entrada.'); return }
+    const f = new FormData(e.currentTarget)
+    setEnviando(true); setError('')
+    try {
+      const r = await rpc<{ token: string }>('crear_pedido_entradas', {
+        p_nombre: f.get('nombre'), p_email: f.get('email'), p_whatsapp: f.get('whatsapp'), p_metodo: metodo,
+        p_items: Object.entries(cant).filter(([, n]) => n > 0).map(([id, n]) => ({ tipo_entrada_id: id, cantidad: n })),
+      })
+      nav(`/p/${r.token}`)
+    } catch (err) { setError((err as Error).message); setEnviando(false) }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Titulo bajada="Sábado 19 de diciembre. Entradas en tu celular: cero papel.">Entradas</Titulo>
+      {!abiertas && <Alerta tipo="alerta">{config.ventas.mensaje_cerrado ?? 'La venta abre muy pronto.'}</Alerta>}
+      {!tipos ? <Spinner /> : (
+        <form onSubmit={comprar} className="grid gap-6 md:grid-cols-[1.2fr_1fr]">
+          <div className="space-y-4">
+            {tipos.map((t) => {
+              const agotada = t.restantes === 0
+              return (
+                <Card key={t.id} acento={ACENTO[t.orden] ?? 'var(--color-acento)'}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-2xl font-bold">{t.nombre}</h2>
+                      <p className="font-display text-3xl font-bold">{pesos(t.precio)}</p>
+                    </div>
+                    {t.cupo != null && (
+                      <span className={`rounded-full px-3 py-1 text-sm font-bold ${agotada ? 'bg-error text-white' : 'bg-secundario'}`}>
+                        {agotada ? 'Agotada' : `Quedan ${t.restantes}`}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-bosque/80">{t.descripcion}</p>
+                  <ul className="mt-2 space-y-1 text-sm font-semibold">
+                    {t.incluye_almuerzo && <li>🥟 Incluye vale de almuerzo de La Tregua</li>}
+                    {t.incluye_festival && <li>🌿 Incluye el festival de la tarde</li>}
+                    <li>{t.valor_canje > 0 ? `🔁 100% canjeable por ${pesos(t.valor_canje)} en un puesto` : '✋ No es canjeable (paga la actividad de la mañana)'}</li>
+                  </ul>
+                  {abiertas && !agotada && (
+                    <div className="mt-4 flex items-center gap-3" role="group" aria-label={`Cantidad de ${t.nombre}`}>
+                      <Button type="button" variante="borde" className="size-12 !p-0 text-2xl" onClick={() => cambiar(t, -1)} aria-label="Quitar una">−</Button>
+                      <span className="w-8 text-center text-2xl font-bold" aria-live="polite">{cant[t.id] ?? 0}</span>
+                      <Button type="button" variante="borde" className="size-12 !p-0 text-2xl" onClick={() => cambiar(t, 1)} aria-label="Agregar una">+</Button>
+                    </div>
+                  )}
+                </Card>
+              )
+            })}
+          </div>
+          {abiertas && (
+            <Card className="h-fit space-y-4 md:sticky md:top-24">
+              <h2 className="text-xl font-bold">Tus datos</h2>
+              <DatosComprador />
+              <MetodoPago valor={metodo} onChange={setMetodo} />
+              <div className="flex items-baseline justify-between border-t border-secundario pt-3">
+                <span className="font-bold">Total</span>
+                <span className="font-display text-3xl font-bold">{pesos(total)}</span>
+              </div>
+              {error && <Alerta tipo="error">{error}</Alerta>}
+              <Button grande disabled={enviando || !nTotal}>{enviando ? 'Reservando…' : metodo === 'efectivo' ? 'Reservar' : 'Continuar al pago'}</Button>
+            </Card>
+          )}
+        </form>
+      )}
+    </div>
+  )
+}
