@@ -27,13 +27,17 @@ export default function Panel() {
 }
 
 function PanelInterno() {
-  const { session, perfil, cargando, puede, salir } = useAuth()
+  const { session, perfil, cargando, error, puede, salir, recargar } = useAuth()
   if (cargando) return <Spinner />
   if (!session) return <Login />
   if (!perfil || !perfil.roles.length) return (
     <div className="mx-auto max-w-md p-6">
       <Alerta tipo="alerta">Tu cuenta ({session.user.email}) todavía no tiene un rol asignado. Pedile a una admin que te lo asigne.</Alerta>
-      <Button className="mt-4" variante="borde" onClick={salir}>Salir</Button>
+      {error && <p className="mt-3 rounded-xl bg-white p-3 font-mono text-xs">Detalle técnico: {error}</p>}
+      <div className="mt-4 flex gap-2">
+        <Button onClick={recargar}>Volver a revisar</Button>
+        <Button variante="borde" onClick={salir}>Salir</Button>
+      </div>
     </div>
   )
   const visibles = SECCIONES.filter((s) => !s.rol || puede(s.rol))
