@@ -16,6 +16,7 @@ export type Config = {
 export type TipoEntrada = {
   id: string; nombre: string; descripcion: string | null; precio: number; cupo: number | null
   restantes: number | null; incluye_almuerzo: boolean; incluye_festival: boolean; valor_canje: number; orden: number
+  pregunta_mat: boolean
 }
 
 export type Marca = {
@@ -39,14 +40,14 @@ export type PedidoPublico = {
   tiene_comprobante: boolean; es_regalo: boolean; regalo_para: string | null
   entrega: 'retiro_petruca' | 'retiro_festival' | null; entregado: boolean; created_at: string
   items: { item_tipo: string; nombre: string; cantidad: number; precio_unit: number }[]
-  entradas: { token: string; codigo_corto: string; titular_nombre: string; tipo: string; activa: boolean }[]
+  entradas: { token: string; codigo_corto: string; titular_nombre: string; tipo: string; activa: boolean; trae_mat: boolean | null }[]
   pago: Pago
 }
 
 export type EntradaPublica = {
   token: string; codigo_corto: string; titular_nombre: string; activa: boolean
-  ingreso_at: string | null; almuerzo_at: string | null
-  tipo: { nombre: string; descripcion: string | null; incluye_almuerzo: boolean; incluye_festival: boolean; valor_canje: number }
+  ingreso_at: string | null; almuerzo_at: string | null; trae_mat: boolean | null
+  tipo: { nombre: string; descripcion: string | null; incluye_almuerzo: boolean; incluye_festival: boolean; valor_canje: number; pregunta_mat: boolean }
   pedido: { codigo: string; estado: PedidoEstado; metodo_pago: string }
   canje: { puesto: string; at: string } | null
 }

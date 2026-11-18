@@ -8,7 +8,7 @@ import type { PedidoEstado, PedidoPublico } from '../../lib/types'
 import { linkWa, origen } from '../../lib/whatsapp'
 
 type Pend = {
-  id: string; codigo: string; tipo: 'entrada' | 'bolsa'; nombre: string; email: string | null; whatsapp: string | null
+  id: string; codigo: string; tipo: 'entrada' | 'bolsa'; nombre: string; email: string | null; whatsapp: string | null; instagram?: string | null
   total: number; metodo_pago: string; estado: PedidoEstado; comprobante_path: string | null; vence_at: string | null
   created_at: string; token: string; detalle: string | null
 }
@@ -28,7 +28,7 @@ export default function Pagos() {
     const q = busca.trim().replace(/[,()%*\\]/g, " ")
     if (!q) { setEncontrados(null); return }
     const { data } = await supabase.from('pedidos')
-      .select('id,codigo,tipo,nombre,email,whatsapp,total,metodo_pago,estado,comprobante_path,vence_at,created_at,token')
+      .select('id,codigo,tipo,nombre,email,whatsapp,instagram,total,metodo_pago,estado,comprobante_path,vence_at,created_at,token')
       .or(`codigo.ilike.%${q}%,nombre.ilike.%${q}%,whatsapp.ilike.%${q}%`).order('created_at', { ascending: false }).limit(30)
     setEncontrados((data as Pend[]) ?? [])
   }
@@ -80,7 +80,7 @@ export default function Pagos() {
         <div>
           <p className="text-lg font-bold">{p.nombre} <span className="font-mono text-sm text-bosque/70">{p.codigo}</span></p>
           <p className="text-sm">{p.tipo === 'entrada' ? '🎟️' : '🎁'} {p.detalle ?? p.tipo} · <strong>{pesos(p.total)}</strong> · {p.metodo_pago}</p>
-          <p className="text-xs text-bosque/70">{fechaHora(p.created_at)}{p.vence_at ? ` · vence ${fechaHora(p.vence_at)}` : ''} · {p.whatsapp}</p>
+          <p className="text-xs text-bosque/70">{fechaHora(p.created_at)}{p.vence_at ? ` · vence ${fechaHora(p.vence_at)}` : ''} · {p.whatsapp}{p.instagram ? <> · <a className="underline" href={`https://instagram.com/${p.instagram}`} target="_blank" rel="noreferrer">@{p.instagram}</a></> : null}</p>
         </div>
         <EstadoPedido estado={p.estado} />
       </div>

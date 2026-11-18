@@ -58,6 +58,7 @@ export default function BolsaRitual() {
         p_bolsa_id: bolsa!.id, p_cantidad: cantBolsa,
         p_extras: Object.entries(cantExtra).filter(([, n]) => n > 0).map(([producto_id, cantidad]) => ({ producto_id, cantidad })),
         p_es_regalo: regalo, p_regalo_para: f.get('regalo_para'), p_regalo_mensaje: f.get('regalo_mensaje'), p_entrega: entrega,
+        p_instagram: f.get('instagram'),
       })
       nav(`/p/${r.token}`)
     } catch (err) { setError((err as Error).message); setEnviando(false) }

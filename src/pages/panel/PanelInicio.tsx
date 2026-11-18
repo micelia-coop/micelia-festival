@@ -6,7 +6,7 @@ import { rpc } from '../../lib/supabase'
 
 type M = {
   inscriptas_desafio: number; pagos_por_revisar: number; pendientes: number; canjes: number; bolsas_pagadas: number; efectivo_puerta: number
-  entradas: { tipo: string; cupo: number | null; pagadas: number; reservadas: number; ingresaron: number; almuerzos_retirados: number; incluye_almuerzo: boolean }[]
+  entradas: { tipo: string; cupo: number | null; pagadas: number; reservadas: number; ingresaron: number; almuerzos_retirados: number; incluye_almuerzo: boolean; pregunta_mat?: boolean; mats_a_prestar?: number; mats_propios?: number }[]
   capacidad_canje: { sin_tope: boolean; cupos: number; entradas_canjeables: number }
 }
 
@@ -52,6 +52,8 @@ export default function PanelInicio() {
                   <div><dt className="text-bosque/70">Ingresaron</dt><dd className="text-2xl font-bold">{t.ingresaron}</dd></div>
                   {t.incluye_almuerzo && <div><dt className="text-bosque/70">Almuerzos a preparar</dt><dd className="text-2xl font-bold">{t.pagadas}</dd></div>}
                   {t.incluye_almuerzo && <div><dt className="text-bosque/70">Almuerzos retirados</dt><dd className="text-2xl font-bold">{t.almuerzos_retirados}</dd></div>}
+                  {t.pregunta_mat && <div><dt className="text-bosque/70">🧘 Mats a prestar</dt><dd className="text-2xl font-bold">{t.mats_a_prestar ?? 0}</dd></div>}
+                  {t.pregunta_mat && <div><dt className="text-bosque/70">Traen su mat</dt><dd className="text-2xl font-bold">{t.mats_propios ?? 0}</dd></div>}
                 </dl>
               </Card>
             ))}

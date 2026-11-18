@@ -5,7 +5,7 @@ import { fechaHora } from '../../lib/format'
 import { supabase } from '../../lib/supabase'
 
 type Dia = { dia: number; fecha: string; titulo: string | null; descripcion: string | null; youtube_url: string | null; publicado: boolean }
-type Insc = { id: string; nombre: string; email: string; whatsapp: string | null; ciudad: string | null; como_se_entero: string | null; acepta_comunicaciones: boolean; created_at: string }
+type Insc = { id: string; nombre: string; email: string; whatsapp: string | null; instagram: string | null; ciudad: string | null; como_se_entero: string | null; acepta_comunicaciones: boolean; created_at: string }
 
 export default function PanelDesafio() {
   const [dias, setDias] = useState<Dia[] | null>(null)
@@ -14,7 +14,7 @@ export default function PanelDesafio() {
 
   useEffect(() => {
     supabase.from('desafio_dias').select('*').order('dia').then(({ data }) => setDias((data as Dia[]) ?? []))
-    supabase.from('desafio_inscripciones').select('id,nombre,email,whatsapp,ciudad,como_se_entero,acepta_comunicaciones,created_at')
+    supabase.from('desafio_inscripciones').select('id,nombre,email,whatsapp,instagram,ciudad,como_se_entero,acepta_comunicaciones,created_at')
       .order('created_at', { ascending: false }).then(({ data }) => setInsc((data as Insc[]) ?? []))
   }, [])
 
@@ -51,7 +51,7 @@ export default function PanelDesafio() {
           <Button variante="suave" disabled={!insc.length} onClick={() => descargarCsv('inscriptas-desafio.csv', insc.map(({ id: _id, ...r }) => r))}>Descargar CSV</Button>
         </div>
         <ul className="mt-3 max-h-72 divide-y divide-secundario/60 overflow-y-auto text-sm">
-          {insc.map((i) => <li key={i.id} className="py-2"><strong>{i.nombre}</strong> · {i.email} · {i.whatsapp ?? '—'} <span className="text-bosque/60">· {fechaHora(i.created_at)}</span></li>)}
+          {insc.map((i) => <li key={i.id} className="py-2"><strong>{i.nombre}</strong> · {i.email} · {i.whatsapp ?? '—'}{i.instagram ? ` · @${i.instagram}` : ''} <span className="text-bosque/60">· {fechaHora(i.created_at)}</span></li>)}
         </ul>
       </Card>
 

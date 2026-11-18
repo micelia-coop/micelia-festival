@@ -14,6 +14,7 @@ export default function Entradas() {
   const nav = useNavigate()
   const [tipos, setTipos] = useState<TipoEntrada[] | null>(null)
   const [cant, setCant] = useState<Record<string, number>>({})
+  const [mats, setMats] = useState<Record<string, (boolean | null)[]>>({})
   const [metodo, setMetodo] = useState<'transferencia' | 'efectivo'>('transferencia')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
@@ -32,12 +33,18 @@ export default function Entradas() {
   async function comprar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!nTotal) { setError('Elegí al menos una entrada.'); return }
+    const faltaMat = (tipos ?? []).some((t) => t.pregunta_mat && (cant[t.id] ?? 0) > 0 &&
+      Array.from({ length: cant[t.id] }, (_, i) => mats[t.id]?.[i] ?? null).some((m) => m === null))
+    if (faltaMat) { setError('Contanos si cada persona trae su mat o necesita que se lo prestemos.'); return }
     const f = new FormData(e.currentTarget)
     setEnviando(true); setError('')
     try {
       const r = await rpc<{ token: string }>('crear_pedido_entradas', {
         p_nombre: f.get('nombre'), p_email: f.get('email'), p_whatsapp: f.get('whatsapp'), p_metodo: metodo,
-        p_items: Object.entries(cant).filter(([, n]) => n > 0).map(([id, n]) => ({ tipo_entrada_id: id, cantidad: n })),
+        p_instagram: f.get('instagram'),
+        p_items: Object.entries(cant).filter(([, n]) => n > 0).map(([id, n]) => ({
+          tipo_entrada_id: id, cantidad: n, mats: Array.from({ length: n }, (_, i) => mats[id]?.[i] ?? null),
+        })),
       })
       nav(`/p/${r.token}`)
     } catch (err) { setError((err as Error).message); setEnviando(false) }
@@ -77,6 +84,25 @@ export default function Entradas() {
                       <span className="w-8 text-center text-2xl font-bold" aria-live="polite">{cant[t.id] ?? 0}</span>
                       <Button type="button" variante="borde" className="size-12 !p-0 text-2xl" onClick={() => cambiar(t, 1)} aria-label="Agregar una">+</Button>
                     </div>
+                  )}
+                  {abiertas && t.pregunta_mat && (cant[t.id] ?? 0) > 0 && (
+                    <fieldset className="mt-4 space-y-2 rounded-2xl bg-fondo p-3">
+                      <legend className="px-1 text-sm font-bold">🧘 ¿Traen su mat de yoga?</legend>
+                      {Array.from({ length: cant[t.id] }, (_, i) => {
+                        const v = mats[t.id]?.[i] ?? null
+                        const set = (val: boolean) => setMats((m) => { const arr = [...(m[t.id] ?? [])]; arr[i] = val; return { ...m, [t.id]: arr } })
+                        const op = (val: boolean, txt: string) => (
+                          <button type="button" onClick={() => set(val)} aria-pressed={v === val}
+                            className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold ring-2 ${v === val ? 'bg-bosque text-white ring-bosque' : 'bg-white ring-secundario'}`}>{txt}</button>
+                        )
+                        return (
+                          <div key={i} className="space-y-1">
+                            {cant[t.id] > 1 && <p className="text-xs font-bold text-bosque/70">Persona {i + 1}</p>}
+                            <div className="flex gap-2">{op(true, 'Traigo mi mat')}{op(false, 'Necesito que me presten')}</div>
+                          </div>
+                        )
+                      })}
+                    </fieldset>
                   )}
                 </Card>
               )

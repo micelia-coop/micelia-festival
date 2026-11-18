@@ -25,6 +25,7 @@ export default function MiEntrada() {
   else estados.push('Pagada ✓')
   if (e.ingreso_at) estados.push(`Ingresó ${hora(e.ingreso_at)}`)
   if (e.tipo.incluye_almuerzo) estados.push(e.almuerzo_at ? `Almuerzo retirado ${hora(e.almuerzo_at)}` : 'Almuerzo disponible')
+  if (e.tipo.pregunta_mat && e.trae_mat != null) estados.push(e.trae_mat ? '🧘 Trae su mat' : '🧘 Le prestamos mat')
   if (e.canje) estados.push(`Canjeada en ${e.canje.puesto} · ${hora(e.canje.at)}`)
 
   return (

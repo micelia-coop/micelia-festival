@@ -79,7 +79,7 @@ export default function MiPedido() {
           <ul className="space-y-2">
             {p.entradas.map((e) => (
               <li key={e.token} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-fondo p-3">
-                <div><p className="font-bold">{e.titular_nombre}</p><p className="text-sm">{e.tipo} · {e.codigo_corto}</p></div>
+                <div><p className="font-bold">{e.titular_nombre}</p><p className="text-sm">{e.tipo} · {e.codigo_corto}{e.trae_mat != null ? (e.trae_mat ? ' · trae mat' : ' · necesita mat') : ''}</p></div>
                 <div className="flex gap-2">
                   <Link to={`/e/${e.token}`} className="rounded-xl bg-bosque px-3 py-2 text-sm font-bold text-white">Ver QR</Link>
                   <a href={linkWa(null, `Tu entrada para el ${config.festival.nombre}: ${origen()}/e/${e.token}`)} target="_blank" rel="noreferrer"

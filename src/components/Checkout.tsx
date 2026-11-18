@@ -8,6 +8,7 @@ export function DatosComprador() {
         <Input name="whatsapp" type="tel" required autoComplete="tel" placeholder="261 555 1234" />
       </Field>
       <Field label="Email (opcional)"><Input name="email" type="email" autoComplete="email" /></Field>
+      <Field label="Usuario de Instagram (opcional)"><Input name="instagram" placeholder="@tuusuario" autoCapitalize="none" autoCorrect="off" /></Field>
     </div>
   )
 }

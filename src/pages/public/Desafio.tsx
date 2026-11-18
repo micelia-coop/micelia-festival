@@ -74,6 +74,7 @@ function Inscripcion({ consentimiento, gestiona }: { consentimiento?: string; ge
       const r = await rpc<{ ya_inscripta: boolean }>('inscribir_desafio', {
         p_nombre: f.get('nombre'), p_email: f.get('email'), p_whatsapp: f.get('whatsapp'),
         p_ciudad: f.get('ciudad'), p_como_se_entero: f.get('como'), p_acepta: f.get('acepta') === 'on',
+        p_instagram: f.get('instagram'),
       })
       setEstado(r.ya_inscripta ? 'ya' : 'ok')
     } catch (err) { setError((err as Error).message); setEstado('form') }
@@ -94,6 +95,7 @@ function Inscripcion({ consentimiento, gestiona }: { consentimiento?: string; ge
         <Field label="Nombre"><Input name="nombre" required autoComplete="name" /></Field>
         <Field label="Email"><Input name="email" type="email" required autoComplete="email" /></Field>
         <Field label="WhatsApp" hint="Con código de área, ej. 261 555 1234"><Input name="whatsapp" type="tel" required autoComplete="tel" /></Field>
+        <Field label="Usuario de Instagram (opcional)"><Input name="instagram" placeholder="@tuusuario" autoCapitalize="none" autoCorrect="off" /></Field>
         <Field label="Ciudad (opcional)"><Input name="ciudad" /></Field>
         <Field label="¿Cómo te enteraste? (opcional)">
           <Select name="como" defaultValue="">
