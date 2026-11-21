@@ -32,6 +32,8 @@ export type Marca = {
   logo_path: string | null; instagram: string | null; whatsapp: string | null; web: string | null
   estado: 'postulada' | 'confirmada' | 'rechazada'; en_guia_regalos: boolean; participa_festival: boolean; orden: number
   contacto_interno?: string | null; notas_internas?: string | null; created_at?: string
+  registro_token?: string | null; registro_abierto?: boolean; registro_completado_at?: string | null
+  registro_extra?: Record<string, string>
 }
 
 export type Producto = {

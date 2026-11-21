@@ -1,7 +1,8 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { Alerta, Button, Card, Field, Input, Select, Spinner, Textarea } from '../../components/ui'
 import { fechaHora, pesos } from '../../lib/format'
-import { supabase, urlPublica } from '../../lib/supabase'
+import { rpc, supabase, urlPublica } from '../../lib/supabase'
+import { linkWa, origen } from '../../lib/whatsapp'
 import type { Marca, Producto } from '../../lib/types'
 
 const TIPOS = ['guardiana', 'feriante', 'invitada', 'micelia', 'gastronomia', 'alianza']
@@ -26,18 +27,25 @@ export default function PanelMarcas() {
   if (sel) return <EditorMarca marca={sel} onVolver={() => { setSel(null); cargar() }} />
   const conteo = (e: string) => (marcas ?? []).filter((m) => m.estado === e).length
 
-  async function nueva() {
-    const nombre = prompt('Nombre de la marca:')
+  async function nueva(conRegistro = false) {
+    const nombre = prompt(conRegistro ? 'Nombre de la marca a invitar (después ella completa el resto):' : 'Nombre de la marca:')
     if (!nombre) return
     const slug = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36).slice(-3)
-    const { data, error } = await supabase.from('marcas').insert({ nombre, slug, estado: 'confirmada' }).select('*').single()
+    const { data, error } = await supabase.from('marcas').insert({ nombre, slug, estado: 'confirmada', participa_festival: true }).select('*').single()
     if (error) { alert(error.message); return }
-    setSel(data as Marca)
+    let marca = data as Marca
+    if (conRegistro) {
+      try { marca = { ...marca, registro_token: await rpc<string>('registro_generar', { p_marca_id: marca.id }), registro_abierto: true } }
+      catch (e) { alert((e as Error).message) }
+    }
+    setSel(marca)
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between"><h1 className="text-3xl font-bold">Marcas</h1><Button onClick={nueva}>+ Nueva marca</Button></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-3xl font-bold">Marcas</h1>
+        <div className="flex flex-wrap gap-2"><Button onClick={() => nueva(true)}>+ Invitar marca a registrarse</Button><Button variante="suave" onClick={() => nueva(false)}>+ Cargarla yo</Button></div></div>
+      <p className="text-sm text-bosque/70">“Invitar” genera un link privado para que la marca complete sus datos, logo y productos. El link no aparece en la web.</p>
       <div className="flex gap-2">
         {ESTADOS.map((e) => (
           <button key={e} onClick={() => setFiltro(e)} aria-pressed={filtro === e}
@@ -53,6 +61,7 @@ export default function PanelMarcas() {
               <Card className="!p-4">
                 <p className="text-lg font-bold">{m.nombre} <span className="text-sm font-semibold text-bosque/60">· {m.tipo}</span></p>
                 <p className="text-sm">{m.rubro ?? 'Sin rubro'} {m.en_guia_regalos && '· 🎁 guía'} {m.participa_festival && '· 🌿 festival'}</p>
+                {m.registro_token && <p className="mt-1 text-xs font-bold">{m.registro_completado_at ? '✅ Registro completo' : '⏳ Registro pendiente'}{!m.registro_abierto && ' · link cerrado'}</p>}
                 {m.estado === 'postulada' && <p className="mt-1 text-xs text-bosque/70">Postulada {m.created_at ? fechaHora(m.created_at) : ''} · {m.contacto_interno}</p>}
               </Card>
             </button></li>
@@ -73,7 +82,7 @@ function EditorMarca({ marca, onVolver }: { marca: Marca; onVolver: () => void }
   useEffect(() => { cargarProds() }, [])
 
   async function guardar() {
-    const { id: _id, created_at: _c, ...campos } = m
+    const { id: _id, created_at: _c, registro_token: _t, registro_abierto: _a, registro_completado_at: _rc, registro_extra: _re, ...campos } = m
     const { error } = await supabase.from('marcas').update(campos).eq('id', m.id)
     setMsg(error ? { tipo: 'error', t: error.message } : { tipo: 'exito', t: 'Marca guardada ✓' })
   }
@@ -116,6 +125,7 @@ function EditorMarca({ marca, onVolver }: { marca: Marca; onVolver: () => void }
           <label className="cursor-pointer rounded-2xl bg-secundario/60 px-4 py-3 font-bold">Subir logo<input type="file" accept="image/*" className="sr-only" onChange={logo} /></label>
         </div>
       </Card>
+      <RegistroPrivado m={m} onCambio={(c) => setM((x) => ({ ...x, ...c }))} />
       {msg && <Alerta tipo={msg.tipo}>{msg.t}</Alerta>}
       <Button grande onClick={guardar}>Guardar marca</Button>
 
@@ -164,6 +174,58 @@ function EditorProducto({ p: inicial, slug, onCambio }: { p: Producto; slug: str
         <span className="text-sm font-bold">{ok}</span>
         {p.precio != null && <span className="ml-auto text-sm">{pesos(p.precio)}</span>}
       </div>
+    </Card>
+  )
+}
+
+const EXTRA_TXT: Record<string, string> = {
+  contacto_nombre: 'Contacto', contacto_whatsapp: 'WhatsApp de contacto', contacto_email: 'Email de contacto',
+  canje_oferta: 'Ofrece para el canje', medios_pago: 'Medios de pago', necesidades: 'Necesita para el puesto', comentarios: 'Comentarios',
+}
+
+function RegistroPrivado({ m, onCambio }: { m: Marca; onCambio: (c: Partial<Marca>) => void }) {
+  const [msg, setMsg] = useState('')
+  const url = m.registro_token ? `${origen()}/registro/${m.registro_token}` : ''
+  const contacto = m.registro_extra?.contacto_whatsapp || m.whatsapp
+  const texto = `¡Hola! 🌿 Te compartimos el link para completar el registro de ${m.nombre} en el Festival de Solsticio de Micelia: ${url}\n\nAhí podés cargar tus datos, logo y productos. Podés volver a entrar y editarlo cuando quieras.`
+
+  async function generar() {
+    try { onCambio({ registro_token: await rpc<string>('registro_generar', { p_marca_id: m.id }), registro_abierto: true }) }
+    catch (e) { setMsg((e as Error).message) }
+  }
+  async function cerrar() {
+    if (!confirm('¿Cerrar el link? La marca ya no va a poder editar sus datos (lo podés volver a abrir).')) return
+    try { await rpc('registro_cerrar', { p_marca_id: m.id }); onCambio({ registro_abierto: false }) } catch (e) { setMsg((e as Error).message) }
+  }
+  const copiar = () => navigator.clipboard?.writeText(url).then(() => { setMsg('Link copiado ✓'); setTimeout(() => setMsg(''), 2000) })
+
+  return (
+    <Card className="space-y-3" acento="var(--color-arcilla)">
+      <h2 className="text-xl font-bold">Registro privado de la marca</h2>
+      {!m.registro_token || !m.registro_abierto ? (
+        <>
+          <p className="text-sm">{m.registro_token ? 'El link está cerrado: la marca no puede editar.' : 'Generá un link para que la marca complete sus datos, logo y productos.'}</p>
+          <Button onClick={generar}>{m.registro_token ? 'Reabrir link' : 'Generar link de registro'}</Button>
+        </>
+      ) : (
+        <>
+          <p className="break-all rounded-xl bg-fondo p-3 font-mono text-xs">{url}</p>
+          <div className="flex flex-wrap gap-2">
+            <a href={linkWa(contacto, texto)} target="_blank" rel="noreferrer" className="rounded-2xl bg-exito px-4 py-3 font-bold text-white">📲 Enviar por WhatsApp</a>
+            <Button variante="suave" onClick={copiar}>Copiar link</Button>
+            <Button variante="borde" onClick={cerrar}>Cerrar link</Button>
+          </div>
+        </>
+      )}
+      <p className="text-sm font-bold">{m.registro_completado_at ? `✅ Completado el ${fechaHora(m.registro_completado_at)}` : m.registro_token ? '⏳ Todavía no lo completó' : ''}</p>
+      {m.registro_extra && Object.keys(m.registro_extra).length > 0 && (
+        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+          {Object.entries(m.registro_extra).map(([k, v]) => (
+            <div key={k} className="rounded-xl bg-fondo p-3"><dt className="font-bold">{EXTRA_TXT[k] ?? k}</dt><dd className="whitespace-pre-line">{v}</dd></div>
+          ))}
+        </dl>
+      )}
+      {msg && <p className="text-sm font-bold">{msg}</p>}
     </Card>
   )
 }
