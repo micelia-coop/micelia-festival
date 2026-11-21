@@ -105,7 +105,7 @@ export default function Registro() {
           <p className="text-sm text-bosque/70">Solo lo ve el equipo de Micelia.</p>
           <Field label="Nombre *"><Input name="contacto_nombre" required defaultValue={x.contacto_nombre ?? ''} /></Field>
           <Field label="WhatsApp *"><Input name="contacto_whatsapp" type="tel" required defaultValue={x.contacto_whatsapp ?? ''} /></Field>
-          <Field label="Email"><Input name="contacto_email" type="email" defaultValue={x.contacto_email ?? ''} /></Field>
+          <Field label="Email *" hint="Te mandamos la confirmación del registro"><Input name="contacto_email" type="email" required defaultValue={x.contacto_email ?? ''} /></Field>
         </Card>
 
         <Card className="space-y-3">

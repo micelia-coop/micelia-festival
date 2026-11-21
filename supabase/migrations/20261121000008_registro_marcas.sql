@@ -117,8 +117,7 @@ begin
       'canje_oferta', left(nullif(trim(coalesce(p_datos->>'canje_oferta', '')), ''), 1000),
       'medios_pago', left(nullif(trim(coalesce(p_datos->>'medios_pago', '')), ''), 300),
       'necesidades', left(nullif(trim(coalesce(p_datos->>'necesidades', '')), ''), 1000),
-      'comentarios', left(nullif(trim(coalesce(p_datos->>'comentarios', '')), ''), 2000))),
-    registro_completado_at = now()
+      'comentarios', left(nullif(trim(coalesce(p_datos->>'comentarios', '')), ''), 2000)))
   where id = v_marca.id;
 
   for v_p in select * from jsonb_array_elements(coalesce(p_productos, '[]'::jsonb)) loop
@@ -158,6 +157,9 @@ begin
   delete from public.productos p
   where p.marca_id = v_marca.id and not (p.id = any (v_ids))
     and not exists (select 1 from public.bolsa_items_base b where b.producto_id = p.id);
+
+  -- Al final, para que el aviso por mail ya vea los productos actualizados.
+  update public.marcas set registro_completado_at = now() where id = v_marca.id;
 
   return jsonb_build_object('ok', true);
 end; $$;
