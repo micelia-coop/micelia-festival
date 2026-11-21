@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export default function CuentaRegresiva({ hasta }: { hasta: string }) {
+export default function CuentaRegresiva({ hasta, sinMinutos }: { hasta: string; sinMinutos?: boolean }) {
   const [ahora, setAhora] = useState(Date.now())
   useEffect(() => { const t = setInterval(() => setAhora(Date.now()), 60_000); return () => clearInterval(t) }, [])
   const ms = new Date(hasta).getTime() - ahora
@@ -16,7 +16,7 @@ export default function CuentaRegresiva({ hasta }: { hasta: string }) {
   )
   return (
     <div className="flex gap-2" aria-label={`Faltan ${dias} días y ${horas} horas`}>
-      {caja(dias, 'días')}{caja(horas, 'horas')}{caja(min, 'min')}
+      {caja(dias, 'días')}{caja(horas, 'horas')}{!sinMinutos && caja(min, 'min')}
     </div>
   )
 }

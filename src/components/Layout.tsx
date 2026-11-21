@@ -2,19 +2,21 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useConfig } from '../lib/config'
 import { supabaseConfigurado } from '../lib/supabase'
+import type { Sitio } from '../lib/types'
 
-const NAV = [
+const NAV: { to: string; label: string; flag?: keyof Sitio }[] = [
   { to: '/desafio', label: 'Desafío 21 días' },
-  { to: '/entradas', label: 'Entradas' },
-  { to: '/bolsa-ritual', label: 'Bolsa Ritual' },
-  { to: '/marcas', label: 'Guía de regalos' },
-  { to: '/suma-tu-marca', label: 'Sumá tu marca' },
-  { to: '/info', label: 'Info y FAQ' },
+  { to: '/entradas', label: 'Entradas', flag: 'mostrar_entradas' },
+  { to: '/bolsa-ritual', label: 'Bolsa Ritual', flag: 'mostrar_bolsa' },
+  { to: '/marcas', label: 'Guía de regalos', flag: 'mostrar_marcas' },
+  { to: '/suma-tu-marca', label: 'Sumá tu marca', flag: 'mostrar_postulacion' },
+  { to: '/info', label: 'Info y FAQ', flag: 'mostrar_info' },
 ]
 
 export default function Layout() {
   const { config } = useConfig()
   const [abierto, setAbierto] = useState(false)
+  const nav = NAV.filter((n) => !n.flag || config.sitio[n.flag])
   return (
     <div className="flex min-h-dvh flex-col">
       {!supabaseConfigurado && (
@@ -33,7 +35,7 @@ export default function Layout() {
             {abierto ? 'Cerrar' : 'Menú'}
           </button>
           <nav className="hidden gap-1 md:flex" aria-label="Principal">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavLink key={n.to} to={n.to} className={({ isActive }) =>
                 `rounded-xl px-3 py-2 text-sm font-bold ${isActive ? 'bg-crema text-bosque' : 'hover:bg-white/10'}`}>
                 {n.label}
@@ -43,7 +45,7 @@ export default function Layout() {
         </div>
         {abierto && (
           <nav id="menu" className="border-t border-white/10 px-4 pb-4 md:hidden" aria-label="Principal">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <NavLink key={n.to} to={n.to} onClick={() => setAbierto(false)}
                 className={({ isActive }) => `block rounded-xl px-3 py-3 text-lg font-bold ${isActive ? 'bg-crema text-bosque' : ''}`}>
                 {n.label}
@@ -63,7 +65,7 @@ export default function Layout() {
           <div className="flex flex-wrap gap-4">
             {config.festival.instagram_url && <a className="underline" href={config.festival.instagram_url} target="_blank" rel="noreferrer">Instagram</a>}
             {config.festival.telegram_url && <a className="underline" href={config.festival.telegram_url} target="_blank" rel="noreferrer">Telegram</a>}
-            <Link className="underline" to="/info">Info y FAQ</Link>
+            {config.sitio.mostrar_info && <Link className="underline" to="/info">Info y FAQ</Link>}
             <Link className="underline opacity-70" to="/panel">Guardianas</Link>
           </div>
         </div>
