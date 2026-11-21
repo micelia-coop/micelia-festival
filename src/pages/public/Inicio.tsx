@@ -28,7 +28,12 @@ function Teaser() {
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-arcilla sm:text-sm">{t.teaser_fecha_label}</p>
             <p className="font-display text-[8.5vw] font-bold uppercase leading-tight sm:text-5xl">{t.teaser_fecha}</p>
           </div>
-          {conZona(t.cuenta_hasta) && <div className="flex justify-center"><CuentaRegresiva hasta={conZona(t.cuenta_hasta)!} sinMinutos /></div>}
+          {conZona(t.cuenta_hasta) && (
+            <div className="flex flex-col items-center gap-2">
+              <CuentaRegresiva hasta={conZona(t.cuenta_hasta)!} sinMinutos />
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-crema/60">Cuenta regresiva</p>
+            </div>
+          )}
           <div className="pt-2">
             <Link to="/desafio" className="inline-block rounded-2xl bg-lavanda px-6 py-4 text-lg font-bold text-bosque">
               Sumarme al Desafío de Gratitud

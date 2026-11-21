@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useConfig } from '../lib/config'
 import { supabaseConfigurado } from '../lib/supabase'
@@ -17,6 +17,9 @@ export default function Layout() {
   const { config } = useConfig()
   const [abierto, setAbierto] = useState(false)
   const nav = NAV.filter((n) => !n.flag || config.sitio[n.flag])
+  useEffect(() => {
+    document.title = config.sitio.teaser ? `${config.festival.organiza ?? 'Micelia Cooperativa'} · Próximamente` : `${config.festival.nombre} · Micelia`
+  }, [config.sitio.teaser, config.festival.nombre, config.festival.organiza])
   return (
     <div className="flex min-h-dvh flex-col">
       {!supabaseConfigurado && (
@@ -27,8 +30,8 @@ export default function Layout() {
       <header className="sticky top-0 z-30 bg-bosque text-crema shadow">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link to="/" className="font-display text-xl font-bold leading-tight" onClick={() => setAbierto(false)}>
-            {config.festival.nombre}
-            <span className="block text-xs font-sans font-semibold tracking-wide text-tierra">MICELIA COOPERATIVA</span>
+            {config.sitio.teaser ? (config.festival.organiza ?? 'Micelia Cooperativa') : config.festival.nombre}
+            {!config.sitio.teaser && <span className="block text-xs font-sans font-semibold tracking-wide text-tierra">MICELIA COOPERATIVA</span>}
           </Link>
           <button className="rounded-xl px-3 py-2 font-bold ring-1 ring-tierra/60 md:hidden" aria-expanded={abierto}
             aria-controls="menu" onClick={() => setAbierto(!abierto)}>
@@ -61,7 +64,7 @@ export default function Layout() {
 
       <footer className="bg-bosque px-4 py-8 text-sm text-crema/90">
         <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:justify-between">
-          <p><strong>{config.festival.organiza ?? 'Micelia Cooperativa'}</strong> · Festival cero papel 🌱</p>
+          <p><strong>{config.festival.organiza ?? 'Micelia Cooperativa'}</strong>{!config.sitio.teaser && ' · Festival cero papel 🌱'}</p>
           <div className="flex flex-wrap gap-4">
             {config.festival.instagram_url && <a className="underline" href={config.festival.instagram_url} target="_blank" rel="noreferrer">Instagram</a>}
             {config.festival.telegram_url && <a className="underline" href={config.festival.telegram_url} target="_blank" rel="noreferrer">Telegram</a>}
