@@ -7,7 +7,7 @@ export function DatosComprador() {
       <Field label="WhatsApp" hint="Te mandamos tu entrada o tu pedido por acá. Con código de área.">
         <Input name="whatsapp" type="tel" required autoComplete="tel" placeholder="261 555 1234" />
       </Field>
-      <Field label="Email (opcional)"><Input name="email" type="email" autoComplete="email" /></Field>
+      <Field label="Email" hint="Te mandamos la confirmación y tu entrada por mail"><Input name="email" type="email" required autoComplete="email" /></Field>
     </div>
   )
 }

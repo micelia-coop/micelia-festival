@@ -11,6 +11,7 @@ const Marcas = lazy(() => import('./PanelMarcas'))
 const Avisos = lazy(() => import('./PanelAvisos'))
 const Config = lazy(() => import('./PanelConfig'))
 const Equipo = lazy(() => import('./Equipo'))
+const MiCuenta = lazy(() => import('./MiCuenta'))
 
 const SECCIONES: { to: string; label: string; rol: Rol | null }[] = [
   { to: '', label: 'Inicio', rol: null },
@@ -20,6 +21,7 @@ const SECCIONES: { to: string; label: string; rol: Rol | null }[] = [
   { to: 'avisos', label: 'Avisos', rol: 'admin' },
   { to: 'config', label: 'Configuración', rol: 'admin' },
   { to: 'equipo', label: 'Equipo', rol: 'admin' },
+  { to: 'cuenta', label: 'Mi cuenta', rol: null },
 ]
 
 export default function Panel() {
@@ -73,6 +75,7 @@ function PanelInterno() {
             <Route path="avisos" element={ruta('admin', <Avisos />)} />
             <Route path="config" element={ruta('admin', <Config />)} />
             <Route path="equipo" element={ruta('admin', <Equipo />)} />
+            <Route path="cuenta" element={<MiCuenta />} />
             <Route path="*" element={<Navigate to="/panel" replace />} />
           </Routes>
         </Suspense>
