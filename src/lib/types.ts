@@ -7,10 +7,18 @@ export type Pago = { billetera?: string; alias?: string | null; cvu?: string | n
 export type Ventas = { entradas_abiertas?: boolean; bolsas_abiertas?: boolean; mensaje_cerrado?: string }
 export type DesafioCfg = { titulo?: string; bajada?: string; gestiona?: string; consentimiento?: string }
 export type Faq = { p: string; r: string }[]
+export type Sitio = {
+  teaser: boolean
+  mostrar_entradas: boolean; mostrar_bolsa: boolean; mostrar_marcas: boolean
+  mostrar_postulacion: boolean; mostrar_info: boolean; mostrar_recorrido: boolean
+  teaser_kicker?: string; teaser_titulo?: string; teaser_bajada?: string
+  teaser_fecha_label?: string; teaser_fecha?: string; cuenta_hasta?: string
+}
 
 export type Config = {
   festival: Festival; pago: Pago; ventas: Ventas; desafio: DesafioCfg; faq: Faq
   bolsa: { direccion_petruca?: string }; canje: { fecha?: string; desde?: string; hasta?: string }
+  sitio: Sitio
 }
 
 export type TipoEntrada = {

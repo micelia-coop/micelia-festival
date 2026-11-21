@@ -4,9 +4,22 @@ import { useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
 import { supabase, urlPublica } from '../../lib/supabase'
 
-type Campo = { k: string; label: string; tipo?: 'texto' | 'largo' | 'bool' | 'fecha'; hint?: string }
+type Campo = { k: string; label: string; tipo?: 'texto' | 'largo' | 'bool' | 'fecha' | 'fechahora'; hint?: string }
 
 const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
+  { clave: 'sitio', titulo: 'Sitio público: qué se ve', campos: [
+    { k: 'teaser', label: 'Modo "Próximamente" en el inicio (solo fecha, contador y botón al desafío)', tipo: 'bool' },
+    { k: 'mostrar_entradas', label: 'Mostrar Entradas', tipo: 'bool' },
+    { k: 'mostrar_bolsa', label: 'Mostrar Bolsa Ritual', tipo: 'bool' },
+    { k: 'mostrar_marcas', label: 'Mostrar Guía de regalos (marcas)', tipo: 'bool' },
+    { k: 'mostrar_postulacion', label: 'Mostrar "Sumá tu marca" (postulación abierta)', tipo: 'bool' },
+    { k: 'mostrar_info', label: 'Mostrar Info y FAQ', tipo: 'bool' },
+    { k: 'mostrar_recorrido', label: 'Mostrar "El recorrido" en el inicio completo', tipo: 'bool' },
+    { k: 'teaser_kicker', label: 'Próximamente · línea de arriba' }, { k: 'teaser_titulo', label: 'Próximamente · título grande' },
+    { k: 'teaser_bajada', label: 'Próximamente · bajada' }, { k: 'teaser_fecha_label', label: 'Próximamente · texto sobre la fecha' },
+    { k: 'teaser_fecha', label: 'Próximamente · fecha' },
+    { k: 'cuenta_hasta', label: 'Cuenta regresiva hasta', tipo: 'fechahora', hint: 'Hora de Mendoza' },
+  ] },
   { clave: 'ventas', titulo: 'Ventas', campos: [
     { k: 'entradas_abiertas', label: 'Venta de entradas abierta', tipo: 'bool' },
     { k: 'bolsas_abiertas', label: 'Venta de Bolsa Ritual abierta', tipo: 'bool' },
@@ -67,7 +80,7 @@ function SeccionCfg({ clave, titulo, campos, valor, onGuardado }: { clave: strin
             <Field label={c.label} hint={c.hint}>
               {c.tipo === 'largo'
                 ? <Textarea value={String(v[c.k] ?? '')} onChange={(e) => setV({ ...v, [c.k]: e.target.value })} />
-                : <Input type={c.tipo === 'fecha' ? 'date' : 'text'} value={String(v[c.k] ?? '')} onChange={(e) => setV({ ...v, [c.k]: e.target.value })} />}
+                : <Input type={c.tipo === 'fecha' ? 'date' : c.tipo === 'fechahora' ? 'datetime-local' : 'text'} value={String(v[c.k] ?? '')} onChange={(e) => setV({ ...v, [c.k]: e.target.value })} />}
             </Field>
           </div>
         ))}
