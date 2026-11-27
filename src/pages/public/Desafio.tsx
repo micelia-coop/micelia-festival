@@ -65,6 +65,7 @@ export default function Desafio() {
 function Inscripcion({ consentimiento, gestiona }: { consentimiento?: string; gestiona?: string }) {
   const [estado, setEstado] = useState<'form' | 'enviando' | 'ok' | 'ya'>('form')
   const [error, setError] = useState('')
+  const [como, setComo] = useState('')
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -73,7 +74,8 @@ function Inscripcion({ consentimiento, gestiona }: { consentimiento?: string; ge
     try {
       const r = await rpc<{ ya_inscripta: boolean }>('inscribir_desafio', {
         p_nombre: f.get('nombre'), p_email: f.get('email'), p_whatsapp: f.get('whatsapp'),
-        p_ciudad: f.get('ciudad'), p_como_se_entero: f.get('como'), p_acepta: f.get('acepta') === 'on',
+        p_ciudad: f.get('ciudad'),
+        p_como_se_entero: como === 'Otro' ? `Otro: ${String(f.get('como_otro') ?? '').trim()}` : como, p_acepta: f.get('acepta') === 'on',
         p_instagram: f.get('instagram'),
       })
       setEstado(r.ya_inscripta ? 'ya' : 'ok')
@@ -98,12 +100,15 @@ function Inscripcion({ consentimiento, gestiona }: { consentimiento?: string; ge
         <Field label="Usuario de Instagram (opcional)"><Input name="instagram" placeholder="@tuusuario" autoCapitalize="none" autoCorrect="off" /></Field>
         <Field label="Ciudad (opcional)"><Input name="ciudad" /></Field>
         <Field label="¿Cómo te enteraste? (opcional)">
-          <Select name="como" defaultValue="">
+          <Select name="como" value={como} onChange={(e) => setComo(e.target.value)}>
             <option value="">Elegí una opción</option>
             <option>Instagram</option><option>Telegram</option><option>WhatsApp</option>
             <option>Una amiga</option><option>Respira y Transfórmate</option><option>Otro</option>
           </Select>
         </Field>
+        {como === 'Otro' && (
+          <Field label="¿Cuál?"><Input name="como_otro" required autoFocus placeholder="Contanos cómo te enteraste" maxLength={120} /></Field>
+        )}
         <label className="flex gap-3 text-sm">
           <input type="checkbox" name="acepta" required className="mt-1 size-5 shrink-0 accent-bosque" />
           <span>{consentimiento}</span>
