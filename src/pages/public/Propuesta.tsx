@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { BotonRed, IconoInstagram, IconoTelegram, urlInstagram } from '../../components/Iconos'
 import { useConfig } from '../../lib/config'
+import Marcas from './Marcas'
 
 type Nivel = {
   nombre: string; emoji: string; color: string; texto: string; para: string
@@ -43,7 +44,7 @@ export default function Propuesta() {
     <div className="space-y-10">
       <section className="-mx-4 -mt-6 bg-bosque px-4 py-12 text-center text-crema sm:rounded-b-[2.5rem]">
         <div className="mx-auto max-w-2xl space-y-4">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-tierra">Propuesta para sponsors y marcas</p>
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-tierra">Marcas aliadas</p>
           <h1 className="text-4xl font-bold sm:text-5xl">Sé parte del Festival de Solsticio</h1>
           <p className="text-lg text-crema/90">Sábado 19 de diciembre · Una casona con parque en Guaymallén, Mendoza</p>
         </div>
@@ -113,6 +114,13 @@ export default function Propuesta() {
           <div className="rounded-3xl bg-lavanda/40 p-6 font-bold">☔ El festival no se suspende por lluvia.</div>
         </div>
       </section>
+
+      {config.sitio.mostrar_marcas && (
+        <section className="space-y-4">
+          <h2 className="text-center text-3xl font-bold">Nuestras marcas aliadas</h2>
+          <Marcas embebido />
+        </section>
+      )}
 
       <section className="mx-auto max-w-xl space-y-4 rounded-3xl bg-bosque p-8 text-center text-crema">
         <h2 className="text-2xl font-bold">¿Querés ser parte?</h2>

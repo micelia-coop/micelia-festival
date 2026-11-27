@@ -27,7 +27,7 @@ export default function SumaTuMarca() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <Titulo bajada={<>Postulate para ser parte del Festival de Solsticio. Si todavía no la leíste, mirá la <Link to="/propuesta" className="font-bold underline">propuesta con los niveles</Link>.</>}>Postularme</Titulo>
+      <Titulo bajada={<>Postulate para ser parte del Festival de Solsticio. Si todavía no la leíste, mirá la <Link to="/marcas-aliadas" className="font-bold underline">propuesta con los niveles</Link>.</>}>Postularme</Titulo>
       {ok ? (
         <Card><h2 className="text-2xl font-bold">¡Gracias! 🌿</h2><p className="mt-2">Recibimos tu postulación. El equipo de Alianzas te va a escribir.</p></Card>
       ) : (

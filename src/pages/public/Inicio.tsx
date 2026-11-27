@@ -41,8 +41,8 @@ function Teaser() {
             </Link>
           </div>
           {t.mostrar_propuesta && (
-            <Link to="/propuesta" className="inline-block font-semibold text-tierra underline decoration-2 underline-offset-4">
-              ¿Tenés una marca o proyecto? Sé parte del festival →
+            <Link to="/marcas-aliadas" className="inline-block font-semibold text-tierra underline decoration-2 underline-offset-4">
+              ¿Tenés una marca o proyecto? Sumate como marca aliada →
             </Link>
           )}
           <div className="flex items-center justify-center gap-3 pt-2">

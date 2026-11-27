@@ -4,7 +4,7 @@ import { Spinner, Titulo } from '../../components/ui'
 import { supabase, urlPublica } from '../../lib/supabase'
 import { COLS_MARCA_PUBLICA, type Marca } from '../../lib/types'
 
-export default function Marcas() {
+export default function Marcas({ embebido }: { embebido?: boolean } = {}) {
   const [marcas, setMarcas] = useState<Marca[] | null>(null)
   const [rubro, setRubro] = useState('')
 
@@ -18,9 +18,9 @@ export default function Marcas() {
 
   return (
     <div>
-      <Titulo acento="var(--color-amor)" bajada="Regalos conscientes de marcas emprendedoras. Pedí directo a cada marca por WhatsApp.">
+      {!embebido && <Titulo acento="var(--color-amor)" bajada="Regalos conscientes de marcas emprendedoras. Pedí directo a cada marca por WhatsApp.">
         Guía de regalos
-      </Titulo>
+      </Titulo>}
       {!marcas ? <Spinner /> : (
         <>
           {rubros.length > 1 && (

@@ -298,7 +298,7 @@ function InvitarSponsor() {
   const [nombre, setNombre] = useState('')
   const [proyecto, setProyecto] = useState('')
   const [copiado, setCopiado] = useState<'' | 'si' | 'no'>('')
-  const url = `${origen()}/propuesta`
+  const url = `${origen()}/marcas-aliadas`
   const mensaje = `Hola${nombre ? ' ' + nombre.trim() : ''}. Con Micelia, una cooperativa de trabajo de mujeres, estamos armando el Festival de Solsticio el sábado 19/12 en una casona con parque en Guaymallén. Va a ser un día de arte, música, juegos, magia, comiditas ricas y marcas con sentido, con yoga y cierre consciente de solsticio por la mañana, y el festival con cierre artístico por la tarde.
 
 Nos encantaría que ${proyecto.trim() || 'tu proyecto'} sea parte como sponsor. Acá te cuento qué recibe tu comunidad y cómo sumarte, con los niveles Semilla, Raíz y Copa: ${url}
@@ -317,7 +317,7 @@ Nos encantaría que ${proyecto.trim() || 'tu proyecto'} sea parte como sponsor. 
         <div className="flex flex-wrap gap-2">
           <a href={linkWa(null, mensaje)} target="_blank" rel="noreferrer" className="rounded-2xl bg-exito px-4 py-3 font-bold text-white">📲 Enviar por WhatsApp</a>
           <Button variante="suave" onClick={copiar}>{copiado === 'si' ? '¡Copiado!' : 'Copiar mensaje'}</Button>
-          <a href="/propuesta" target="_blank" rel="noreferrer" className="self-center text-sm font-bold underline">Ver la propuesta ↗</a>
+          <a href="/marcas-aliadas" target="_blank" rel="noreferrer" className="self-center text-sm font-bold underline">Ver la propuesta ↗</a>
         </div>
         {copiado === 'no' && <p className="text-sm font-bold text-error">Tu navegador no dejó copiar: tocá el mensaje, seleccionalo y copialo a mano.</p>}
       </div>

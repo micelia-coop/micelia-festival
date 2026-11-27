@@ -50,7 +50,8 @@ export default function App() {
           <Route path="bolsa-ritual" element={<Seccion flag="mostrar_bolsa"><BolsaRitual /></Seccion>} />
           <Route path="suma-tu-marca" element={<Seccion flag={['mostrar_postulacion', 'mostrar_propuesta']}><SumaTuMarca /></Seccion>} />
           <Route path="registro/:token" element={<Registro />} />
-          <Route path="propuesta" element={<Seccion flag="mostrar_propuesta"><Propuesta /></Seccion>} />
+          <Route path="marcas-aliadas" element={<Seccion flag={['mostrar_propuesta', 'mostrar_marcas']}><Propuesta /></Seccion>} />
+          <Route path="propuesta" element={<Navigate to="/marcas-aliadas" replace />} />
           <Route path="info" element={<Seccion flag="mostrar_info"><Info /></Seccion>} />
           <Route path="*" element={<NoEncontrado />} />
         </Route>
