@@ -16,6 +16,7 @@ const BolsaRitual = lazy(() => import('./pages/public/BolsaRitual'))
 const SumaTuMarca = lazy(() => import('./pages/public/SumaTuMarca'))
 const Info = lazy(() => import('./pages/public/Info'))
 const Registro = lazy(() => import('./pages/public/Registro'))
+const Propuesta = lazy(() => import('./pages/public/Propuesta'))
 const NoEncontrado = lazy(() => import('./pages/public/NoEncontrado'))
 const Panel = lazy(() => import('./pages/panel/Panel'))
 
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="bolsa-ritual" element={<Seccion flag="mostrar_bolsa"><BolsaRitual /></Seccion>} />
           <Route path="suma-tu-marca" element={<Seccion flag="mostrar_postulacion"><SumaTuMarca /></Seccion>} />
           <Route path="registro/:token" element={<Registro />} />
+          <Route path="propuesta" element={<Propuesta />} />
           <Route path="info" element={<Seccion flag="mostrar_info"><Info /></Seccion>} />
           <Route path="*" element={<NoEncontrado />} />
         </Route>

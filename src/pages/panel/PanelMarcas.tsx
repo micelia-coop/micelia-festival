@@ -50,6 +50,7 @@ export default function PanelMarcas() {
       <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-3xl font-bold">Marcas aliadas</h1>
         <div className="flex flex-wrap gap-2"><Button onClick={() => nueva(true)}>+ Invitar marca a registrarse</Button><Button variante="suave" onClick={() => nueva(false)}>+ Cargarla yo</Button></div></div>
       <p className="text-sm text-bosque/70"><strong>Invitar:</strong> ponés solo el nombre y le mandás un link privado para que la marca complete sus datos, logo y productos. <strong>Cargarla yo:</strong> completás vos toda la ficha.</p>
+      <InvitarSponsor />
       <div className="flex gap-2">
         {ESTADOS.map((e) => (
           <button key={e} onClick={() => setFiltro(e)} aria-pressed={filtro === e}
@@ -274,5 +275,36 @@ function InvitacionLista({ m, onVolver }: { m: Marca; onVolver: () => void }) {
       </Card>
       <Button variante="borde" onClick={onVolver}>Listo, volver a la lista</Button>
     </div>
+  )
+}
+
+function InvitarSponsor() {
+  const [nombre, setNombre] = useState('')
+  const [proyecto, setProyecto] = useState('')
+  const [copiado, setCopiado] = useState<'' | 'si' | 'no'>('')
+  const url = `${origen()}/propuesta`
+  const mensaje = `Hola${nombre ? ' ' + nombre.trim() : ''}. Con Micelia, una cooperativa de trabajo de mujeres, estamos armando el Festival de Solsticio el sábado 19/12 en una casona con parque en Guaymallén. Va a ser un día de arte, música, juegos, magia, comiditas ricas y marcas con sentido, con yoga y cierre consciente de solsticio por la mañana, y el festival con cierre artístico por la tarde.
+
+Nos encantaría que ${proyecto.trim() || 'tu proyecto'} sea parte como sponsor. Acá te cuento qué recibe tu comunidad y cómo sumarte, con los niveles Semilla, Raíz y Copa: ${url}
+
+¿Te parece que lo conversemos esta semana?`
+  const copiar = async () => { setCopiado(await copiarTexto(mensaje) ? 'si' : 'no'); setTimeout(() => setCopiado(''), 4000) }
+  return (
+    <details className="rounded-3xl bg-superficie p-4 ring-1 ring-secundario/60">
+      <summary className="cursor-pointer text-lg font-bold">💌 Invitar a ser sponsor (mensaje + propuesta)</summary>
+      <div className="mt-3 space-y-3">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Input placeholder="Nombre de la persona" value={nombre} onChange={(e) => setNombre(e.target.value)} aria-label="Nombre de la persona" />
+          <Input placeholder="Su proyecto o marca" value={proyecto} onChange={(e) => setProyecto(e.target.value)} aria-label="Proyecto o marca" />
+        </div>
+        <Textarea rows={8} readOnly value={mensaje} aria-label="Mensaje" onFocus={(e) => e.currentTarget.select()} />
+        <div className="flex flex-wrap gap-2">
+          <a href={linkWa(null, mensaje)} target="_blank" rel="noreferrer" className="rounded-2xl bg-exito px-4 py-3 font-bold text-white">📲 Enviar por WhatsApp</a>
+          <Button variante="suave" onClick={copiar}>{copiado === 'si' ? '¡Copiado!' : 'Copiar mensaje'}</Button>
+          <a href="/propuesta" target="_blank" rel="noreferrer" className="self-center text-sm font-bold underline">Ver la propuesta ↗</a>
+        </div>
+        {copiado === 'no' && <p className="text-sm font-bold text-error">Tu navegador no dejó copiar: tocá el mensaje, seleccionalo y copialo a mano.</p>}
+      </div>
+    </details>
   )
 }
