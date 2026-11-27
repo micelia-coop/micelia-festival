@@ -23,7 +23,8 @@ export default function Desafio() {
     <div className="space-y-8">
       <Titulo acento="var(--color-lavanda)" bajada={d.bajada}>{d.titulo ?? 'Desafío de Gratitud · 21 días'}</Titulo>
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
-        <Inscripcion consentimiento={d.consentimiento} gestiona={d.gestiona} />
+        <Inscripcion consentimiento={d.consentimiento} gestiona={d.gestiona}
+          canalUrl={d.canal_url ?? 'https://t.me/miceliacomunidad/85'} canalTexto={d.canal_texto ?? 'Sumate al Canal de Respira y Transfórmate'} />
         <section>
           <h2 className="mb-3 text-2xl font-bold">Los 21 días</h2>
           <ol className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -62,7 +63,7 @@ export default function Desafio() {
   )
 }
 
-function Inscripcion({ consentimiento, gestiona }: { consentimiento?: string; gestiona?: string }) {
+function Inscripcion({ consentimiento, gestiona, canalUrl, canalTexto }: { consentimiento?: string; gestiona?: string; canalUrl?: string; canalTexto?: string }) {
   const [estado, setEstado] = useState<'form' | 'enviando' | 'ok' | 'ya'>('form')
   const [error, setError] = useState('')
   const [como, setComo] = useState('')
@@ -85,7 +86,13 @@ function Inscripcion({ consentimiento, gestiona }: { consentimiento?: string; ge
   if (estado === 'ok' || estado === 'ya') return (
     <Card acento="var(--color-lavanda)">
       <h2 className="text-2xl font-bold">{estado === 'ok' ? '¡Ya sos parte! 💜' : 'Ya estabas inscripta 💜'}</h2>
-      <p className="mt-2">Cada día se habilita un video nuevo en esta página. Te vamos a ir avisando por WhatsApp y email.</p>
+      <p className="mt-2">Cada día se habilita un video nuevo en esta página. Te vamos a ir avisando por Telegram y email.</p>
+      {canalUrl && (
+        <a href={canalUrl} target="_blank" rel="noreferrer"
+          className="mt-4 inline-flex items-center justify-center rounded-2xl bg-lavanda px-5 py-3 font-bold text-bosque">
+          {canalTexto} →
+        </a>
+      )}
     </Card>
   )
 

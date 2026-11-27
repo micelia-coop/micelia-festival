@@ -5,7 +5,7 @@ export type Festival = {
 }
 export type Pago = { billetera?: string; alias?: string | null; cvu?: string | null; titular?: string | null }
 export type Ventas = { entradas_abiertas?: boolean; bolsas_abiertas?: boolean; mensaje_cerrado?: string }
-export type DesafioCfg = { titulo?: string; bajada?: string; gestiona?: string; consentimiento?: string }
+export type DesafioCfg = { titulo?: string; bajada?: string; gestiona?: string; consentimiento?: string; canal_url?: string; canal_texto?: string }
 export type Faq = { p: string; r: string }[]
 export type Sitio = {
   teaser: boolean

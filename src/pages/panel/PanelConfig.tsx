@@ -38,6 +38,8 @@ const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
   { clave: 'desafio', titulo: 'Textos del Desafío', campos: [
     { k: 'titulo', label: 'Título' }, { k: 'bajada', label: 'Bajada', tipo: 'largo' }, { k: 'gestiona', label: 'Lo gestiona' },
     { k: 'consentimiento', label: 'Texto de consentimiento', tipo: 'largo' },
+    { k: 'canal_texto', label: 'Botón después de inscribirse · texto', hint: 'Ej: Sumate al Canal de Respira y Transfórmate' },
+    { k: 'canal_url', label: 'Botón después de inscribirse · link', hint: 'Ej: https://t.me/miceliacomunidad/85' },
   ] },
   { clave: 'bolsa', titulo: 'Retiro de bolsas', campos: [{ k: 'direccion_petruca', label: 'Texto del punto de retiro en Petruca' }] },
   { clave: 'canje', titulo: 'Franja de canje (día del festival)', campos: [
