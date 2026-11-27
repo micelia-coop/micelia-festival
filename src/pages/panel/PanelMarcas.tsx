@@ -4,6 +4,8 @@ import { fechaHora, pesos } from '../../lib/format'
 import { rpc, supabase, urlPublica } from '../../lib/supabase'
 import { linkWa, origen } from '../../lib/whatsapp'
 import { copiarTexto } from '../../lib/copiar'
+import { useConfig } from '../../lib/config'
+import { propuestaCompleta, type NivelTxt, type PropuestaTxt } from '../../lib/propuesta'
 import type { Marca, Producto } from '../../lib/types'
 
 const TIPOS = ['guardiana', 'feriante', 'invitada', 'micelia', 'gastronomia', 'alianza']
@@ -51,6 +53,7 @@ export default function PanelMarcas() {
         <div className="flex flex-wrap gap-2"><Button onClick={() => nueva(true)}>+ Invitar marca a registrarse</Button><Button variante="suave" onClick={() => nueva(false)}>+ Cargarla yo</Button></div></div>
       <p className="text-sm text-bosque/70"><strong>Invitar:</strong> ponés solo el nombre y le mandás un link privado para que la marca complete sus datos, logo y productos. <strong>Cargarla yo:</strong> completás vos toda la ficha.</p>
       <InvitarSponsor />
+      <EditorPropuesta />
       <div className="flex gap-2">
         {ESTADOS.map((e) => (
           <button key={e} onClick={() => setFiltro(e)} aria-pressed={filtro === e}
@@ -295,15 +298,15 @@ function InvitacionLista({ m, onVolver }: { m: Marca; onVolver: () => void }) {
 }
 
 function InvitarSponsor() {
+  const { config } = useConfig()
   const [nombre, setNombre] = useState('')
   const [proyecto, setProyecto] = useState('')
   const [copiado, setCopiado] = useState<'' | 'si' | 'no'>('')
   const url = `${origen()}/marcas-aliadas`
-  const mensaje = `Hola${nombre ? ' ' + nombre.trim() : ''}. Con Micelia, una cooperativa de trabajo de mujeres, estamos armando el Festival de Solsticio el sábado 19/12 en una casona con parque en Guaymallén. Va a ser un día de arte, música, juegos, magia, comiditas ricas y marcas con sentido, con yoga y cierre consciente de solsticio por la mañana, y el festival con cierre artístico por la tarde.
-
-Nos encantaría que ${proyecto.trim() || 'tu proyecto'} sea parte como sponsor. Acá te cuento qué recibe tu comunidad y cómo sumarte, con los niveles Semilla, Raíz y Copa: ${url}
-
-¿Te parece que lo conversemos esta semana?`
+  const mensaje = propuestaCompleta(config.propuesta).mensaje_invitacion
+    .replace(/\{nombre\}/g, nombre.trim()).replace(/Hola \./, 'Hola.')
+    .replace(/\{proyecto\}/g, proyecto.trim() || 'tu proyecto')
+    .replace(/\{link\}/g, url)
   const copiar = async () => { setCopiado(await copiarTexto(mensaje) ? 'si' : 'no'); setTimeout(() => setCopiado(''), 4000) }
   return (
     <details className="rounded-3xl bg-superficie p-4 ring-1 ring-secundario/60">
@@ -320,6 +323,84 @@ Nos encantaría que ${proyecto.trim() || 'tu proyecto'} sea parte como sponsor. 
           <a href="/marcas-aliadas" target="_blank" rel="noreferrer" className="self-center text-sm font-bold underline">Ver la propuesta ↗</a>
         </div>
         {copiado === 'no' && <p className="text-sm font-bold text-error">Tu navegador no dejó copiar: tocá el mensaje, seleccionalo y copialo a mano.</p>}
+      </div>
+    </details>
+  )
+}
+
+type CampoP = { k: keyof PropuestaTxt; label: string; largo?: boolean; hint?: string }
+const CAMPOS_P: { titulo: string; campos: CampoP[] }[] = [
+  { titulo: 'Encabezado', campos: [
+    { k: 'kicker', label: 'Línea chica de arriba' }, { k: 'titulo', label: 'Título' }, { k: 'subtitulo', label: 'Fecha y lugar' },
+  ] },
+  { titulo: 'Presentación', campos: [
+    { k: 'intro', label: 'Texto de presentación', largo: true, hint: 'Para negrita: **así**' },
+    { k: 'manana_titulo', label: 'Tarjeta 1 · título' }, { k: 'manana_texto', label: 'Tarjeta 1 · texto' },
+    { k: 'tarde_titulo', label: 'Tarjeta 2 · título' }, { k: 'tarde_texto', label: 'Tarjeta 2 · texto' },
+    { k: 'invitacion', label: 'Texto antes de los niveles', largo: true },
+    { k: 'niveles_titulo', label: 'Título de los niveles' },
+  ] },
+  { titulo: 'Stand y lo que brinda Micelia', campos: [
+    { k: 'stand_titulo', label: 'Título de la lista del stand' }, { k: 'stand_traer', label: 'Qué traer', largo: true, hint: 'Un ítem por renglón' },
+    { k: 'brinda_titulo', label: 'Título de lo que brinda Micelia' }, { k: 'brinda', label: 'Lo que brinda Micelia', largo: true, hint: 'Un ítem por renglón' },
+    { k: 'lluvia', label: 'Aviso (lluvia)', hint: 'Vacío = no se muestra' }, { k: 'marcas_titulo', label: 'Título sobre las fichas de marcas' },
+  ] },
+  { titulo: 'Cierre', campos: [
+    { k: 'cta_titulo', label: 'Título' }, { k: 'cta_texto', label: 'Texto', largo: true }, { k: 'cta_boton', label: 'Botón' }, { k: 'cta_dudas', label: 'Texto sobre los íconos' },
+  ] },
+  { titulo: 'Mensaje de invitación (WhatsApp)', campos: [
+    { k: 'mensaje_invitacion', label: 'Mensaje', largo: true, hint: 'Usá {nombre}, {proyecto} y {link}: se reemplazan solos' },
+  ] },
+]
+
+function EditorPropuesta() {
+  const { config, recargar } = useConfig()
+  const [t, setT] = useState<PropuestaTxt>(() => propuestaCompleta(config.propuesta))
+  const [msg, setMsg] = useState<{ tipo: 'exito' | 'error'; t: string } | null>(null)
+  const [guardando, setGuardando] = useState(false)
+  useEffect(() => { setT(propuestaCompleta(config.propuesta)) }, [config.propuesta])
+  const set = (k: keyof PropuestaTxt, v: string) => setT((x) => ({ ...x, [k]: v }))
+  const setNivel = (i: number, k: keyof NivelTxt, v: string) => setT((x) => ({ ...x, niveles: x.niveles.map((n, j) => (j === i ? { ...n, [k]: v } : n)) }))
+
+  async function guardar() {
+    setGuardando(true); setMsg(null)
+    const { error } = await supabase.from('config').upsert({ clave: 'propuesta', valor: t, publico: true })
+    setGuardando(false)
+    if (error) setMsg({ tipo: 'error', t: /row-level|permission/i.test(error.message) ? 'No tenés permiso para guardar estos textos todavía (falta un paso en Supabase).' : error.message })
+    else { setMsg({ tipo: 'exito', t: 'Guardado ✓ Ya se ve en la web.' }); recargar() }
+  }
+
+  return (
+    <details className="rounded-3xl bg-superficie p-4 ring-1 ring-secundario/60">
+      <summary className="cursor-pointer text-lg font-bold">✏️ Textos de la propuesta (página "Marcas aliadas")</summary>
+      <div className="mt-4 space-y-5">
+        <a href="/marcas-aliadas" target="_blank" rel="noreferrer" className="text-sm font-bold underline">Ver la página ↗</a>
+        {CAMPOS_P.map((g) => (
+          <fieldset key={g.titulo} className="space-y-3 rounded-2xl bg-fondo p-4">
+            <legend className="px-1 font-bold">{g.titulo}</legend>
+            {g.campos.map((c) => (
+              <Field key={c.k} label={c.label} hint={c.hint}>
+                {c.largo ? <Textarea rows={c.k === 'mensaje_invitacion' ? 7 : 4} value={String(t[c.k] ?? '')} onChange={(e) => set(c.k, e.target.value)} />
+                  : <Input value={String(t[c.k] ?? '')} onChange={(e) => set(c.k, e.target.value)} />}
+              </Field>
+            ))}
+          </fieldset>
+        ))}
+        <fieldset className="space-y-3 rounded-2xl bg-fondo p-4">
+          <legend className="px-1 font-bold">Niveles</legend>
+          {t.niveles.map((n, i) => (
+            <div key={i} className="space-y-2 rounded-2xl bg-white p-3">
+              <p className="font-bold">{['🌱', '🌿', '🌳'][i]} Nivel {i + 1}</p>
+              <Field label="Nombre"><Input value={n.nombre} onChange={(e) => setNivel(i, 'nombre', e.target.value)} /></Field>
+              <Field label="Para quién es"><Input value={n.para} onChange={(e) => setNivel(i, 'para', e.target.value)} /></Field>
+              <Field label="Aportás" hint="Un ítem por renglón"><Textarea rows={3} value={n.aportas} onChange={(e) => setNivel(i, 'aportas', e.target.value)} /></Field>
+              <Field label="Recibís de Micelia" hint="Un ítem por renglón"><Textarea rows={4} value={n.recibis} onChange={(e) => setNivel(i, 'recibis', e.target.value)} /></Field>
+              <Field label="Nota (opcional)" hint="Ej: horario de presencia"><Input value={n.nota} onChange={(e) => setNivel(i, 'nota', e.target.value)} /></Field>
+            </div>
+          ))}
+        </fieldset>
+        {msg && <Alerta tipo={msg.tipo}>{msg.t}</Alerta>}
+        <div className="sticky bottom-3"><Button grande disabled={guardando} onClick={guardar}>{guardando ? 'Guardando…' : 'Guardar textos de la propuesta'}</Button></div>
       </div>
     </details>
   )

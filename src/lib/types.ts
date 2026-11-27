@@ -19,6 +19,7 @@ export type Config = {
   festival: Festival; pago: Pago; ventas: Ventas; desafio: DesafioCfg; faq: Faq
   bolsa: { direccion_petruca?: string }; canje: { fecha?: string; desde?: string; hasta?: string }
   sitio: Sitio
+  propuesta?: unknown
 }
 
 export type TipoEntrada = {

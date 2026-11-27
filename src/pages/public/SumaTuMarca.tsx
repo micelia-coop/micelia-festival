@@ -2,12 +2,16 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Alerta, Button, Card, Field, Input, Textarea, Titulo } from '../../components/ui'
 import { rpc } from '../../lib/supabase'
+import { useConfig } from '../../lib/config'
+import { lineas, propuestaCompleta } from '../../lib/propuesta'
 
 export default function SumaTuMarca() {
   const [ok, setOk] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const [nivel, setNivel] = useState('')
+  const { config } = useConfig()
+  const niveles = propuestaCompleta(config.propuesta).niveles
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,15 +45,15 @@ export default function SumaTuMarca() {
             <Field label="Web (opcional)"><Input name="web" /></Field>
             <fieldset className="space-y-2">
               <legend className="mb-1 text-sm font-bold">¿Qué nivel te interesa?</legend>
-              {[['Semilla', '🌱 Semilla · premio para el sorteo + venta de 3 entradas'], ['Raíz', '🌿 Raíz · $10.000 + posteo · incluye 1 actividad o taller'],
-                ['Copa', '🌳 Copa · $15.000 + posteo · con stand (12 a 20 hs)'], ['A definir', 'Todavía no sé, quiero conversarlo']].map(([v, t]) => (
+              {[...niveles.map((n, i) => [n.nombre, `${['🌱', '🌿', '🌳'][i]} ${n.nombre} · ${lineas(n.aportas).slice(0, 2).join(' + ')}`]),
+                ['A definir', 'Todavía no sé, quiero conversarlo']].map(([v, t]) => (
                 <label key={v} className={`flex cursor-pointer gap-3 rounded-2xl p-3 ring-2 ${nivel === v ? 'bg-secundario/40 ring-bosque' : 'ring-secundario'}`}>
                   <input type="radio" name="nivel" required checked={nivel === v} onChange={() => setNivel(v)} className="mt-1 size-5 accent-bosque" />
                   <span className="font-semibold">{t}</span>
                 </label>
               ))}
             </fieldset>
-            {nivel === 'Raíz' && <Field label="¿Qué actividad o taller propondrías?" hint="Máximo 1 hora"><Textarea name="actividad" rows={2} /></Field>}
+            {nivel === niveles[1]?.nombre && <Field label="¿Qué actividad o taller propondrías?" hint="Máximo 1 hora"><Textarea name="actividad" rows={2} /></Field>}
             <Field label="Tu nombre (persona de contacto)" hint="No se publica"><Input name="contacto_nombre" required autoComplete="name" /></Field>
             <Field label="Tu WhatsApp" hint="No se publica"><Input name="contacto_whatsapp" type="tel" required autoComplete="tel" /></Field>
             <Field label="Tu email" hint="No se publica"><Input name="contacto_email" type="email" autoComplete="email" /></Field>
