@@ -3,6 +3,7 @@ import { Alerta, Button, Card, Field, Input, Select, Spinner, Textarea } from '.
 import { fechaHora, pesos } from '../../lib/format'
 import { rpc, supabase, urlPublica } from '../../lib/supabase'
 import { linkWa, origen } from '../../lib/whatsapp'
+import { copiarTexto } from '../../lib/copiar'
 import type { Marca, Producto } from '../../lib/types'
 
 const TIPOS = ['guardiana', 'feriante', 'invitada', 'micelia', 'gastronomia', 'alianza']
@@ -213,7 +214,7 @@ function RegistroPrivado({ m, onCambio }: { m: Marca; onCambio: (c: Partial<Marc
     if (!confirm('¿Cerrar el link? La marca ya no va a poder editar sus datos (lo podés volver a abrir).')) return
     try { await rpc('registro_cerrar', { p_marca_id: m.id }); onCambio({ registro_abierto: false }) } catch (e) { setMsg((e as Error).message) }
   }
-  const copiar = () => navigator.clipboard?.writeText(url).then(() => { setMsg('Link copiado ✓'); setTimeout(() => setMsg(''), 2000) })
+  const copiar = async () => { setMsg(await copiarTexto(url) ? 'Link copiado ✓ Ya lo podés pegar.' : 'Tu navegador no dejó copiar: tocá el link de arriba, seleccionalo y copialo a mano.'); setTimeout(() => setMsg(''), 4000) }
 
   return (
     <Card className="space-y-3" acento="var(--color-arcilla)">
@@ -225,7 +226,8 @@ function RegistroPrivado({ m, onCambio }: { m: Marca; onCambio: (c: Partial<Marc
         </>
       ) : (
         <>
-          <p className="break-all rounded-xl bg-fondo p-3 font-mono text-xs">{url}</p>
+          <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} onClick={(e) => e.currentTarget.select()}
+          aria-label="Link de registro" className="w-full rounded-xl bg-fondo p-3 font-mono text-xs" />
           <div className="flex flex-wrap gap-2">
             <a href={linkWa(contacto, texto)} target="_blank" rel="noreferrer" className="rounded-2xl bg-exito px-4 py-3 font-bold text-white">📲 Enviar por WhatsApp</a>
             <Button variante="suave" onClick={copiar}>Copiar link</Button>
@@ -250,21 +252,24 @@ const textoInvitacion = (nombre: string, url: string) =>
   `¡Hola! 🌿 Te compartimos el link para completar el registro de ${nombre} en el Festival de Solsticio de Micelia: ${url}\n\nAhí podés cargar tus datos, logo y productos. Podés volver a entrar y editarlo cuando quieras.`
 
 function InvitacionLista({ m, onVolver }: { m: Marca; onVolver: () => void }) {
-  const [copiado, setCopiado] = useState(false)
+  const [copiado, setCopiado] = useState<'' | 'si' | 'no'>('')
   const url = `${origen()}/registro/${m.registro_token}`
-  const copiar = () => navigator.clipboard?.writeText(url).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000) })
+  const copiar = async () => { setCopiado(await copiarTexto(url) ? 'si' : 'no'); setTimeout(() => setCopiado(''), 4000) }
   return (
     <div className="mx-auto max-w-lg space-y-5">
       <button onClick={onVolver} className="font-bold underline">← Volver a marcas aliadas</button>
       <Card className="space-y-4" acento="var(--color-arcilla)">
         <h1 className="text-2xl font-bold">Link listo para {m.nombre} 🌿</h1>
         <p>Mandáselo a la marca: con ese link completa sus datos, logo y productos. Cuando lo complete, te llega un aviso por mail y la ves como <strong>✅ Registro completo</strong>.</p>
-        <p className="break-all rounded-xl bg-fondo p-3 font-mono text-xs">{url}</p>
+        <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} onClick={(e) => e.currentTarget.select()}
+          aria-label="Link de registro" className="w-full rounded-xl bg-fondo p-3 font-mono text-xs" />
         <div className="flex flex-col gap-2 sm:flex-row">
           <a href={linkWa(null, textoInvitacion(m.nombre, url))} target="_blank" rel="noreferrer"
             className="rounded-2xl bg-exito px-5 py-3 text-center font-bold text-white">📲 Enviar por WhatsApp</a>
-          <Button variante="suave" onClick={copiar}>{copiado ? '¡Copiado!' : 'Copiar link'}</Button>
+          <Button variante="suave" onClick={copiar}>{copiado === 'si' ? '¡Copiado!' : 'Copiar link'}</Button>
         </div>
+        {copiado === 'si' && <p className="text-sm font-bold text-exito">Link copiado ✓ Ya lo podés pegar en WhatsApp.</p>}
+        {copiado === 'no' && <p className="text-sm font-bold text-error">Tu navegador no dejó copiar: tocá el link de arriba, seleccionalo y copialo a mano.</p>}
         <p className="text-sm text-bosque/70">Si lo necesitás de nuevo, entrá a la marca en la lista: el link queda guardado ahí.</p>
       </Card>
       <Button variante="borde" onClick={onVolver}>Listo, volver a la lista</Button>

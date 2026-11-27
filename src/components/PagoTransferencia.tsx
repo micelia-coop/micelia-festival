@@ -1,18 +1,19 @@
 import { useState, type ChangeEvent } from 'react'
+import { copiarTexto } from '../lib/copiar'
 import { pesos } from '../lib/format'
 import { rpc, supabase } from '../lib/supabase'
 import type { Pago } from '../lib/types'
 import { Alerta, Button } from './ui'
 
 function Copiable({ etiqueta, valor }: { etiqueta: string; valor?: string | null }) {
-  const [ok, setOk] = useState(false)
+  const [ok, setOk] = useState<'' | 'si' | 'no'>('')
   if (!valor) return null
   return (
     <div className="flex items-center justify-between gap-2 rounded-2xl bg-fondo px-4 py-3">
       <div className="min-w-0"><p className="text-xs font-bold uppercase text-bosque/70">{etiqueta}</p><p className="break-all text-lg font-bold">{valor}</p></div>
       <Button type="button" variante="suave" className="shrink-0 !px-3 !py-2 text-sm"
-        onClick={() => navigator.clipboard?.writeText(valor).then(() => { setOk(true); setTimeout(() => setOk(false), 1500) })}>
-        {ok ? '¡Copiado!' : 'Copiar'}
+        onClick={async () => { setOk(await copiarTexto(valor) ? 'si' : 'no'); setTimeout(() => setOk(''), 2500) }}>
+        {ok === 'si' ? '¡Copiado!' : ok === 'no' ? 'Copialo a mano' : 'Copiar'}
       </Button>
     </div>
   )
