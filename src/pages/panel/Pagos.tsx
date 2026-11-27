@@ -115,7 +115,14 @@ export default function Pagos() {
       )}
       <section className="space-y-2">
         <h2 className="text-xl font-bold">Por revisar</h2>
-        {!lista ? <Spinner /> : lista.length === 0 ? <p>No hay pagos pendientes 🎉</p> : lista.map((p) => <Fila key={p.id} p={p} />)}
+        {!lista ? <Spinner /> : (() => {
+          const manuales = lista.filter((p) => p.metodo_pago !== 'mercadopago')
+          const mp = lista.length - manuales.length
+          return <>
+            {manuales.length === 0 ? <p>No hay pagos pendientes 🎉</p> : manuales.map((p) => <Fila key={p.id} p={p} />)}
+            {mp > 0 && <p className="text-sm text-bosque/70">Además hay {mp} pedido(s) de Mercado Pago sin terminar de pagar: se activan solos si pagan, o vencen a las 2 hs.</p>}
+          </>
+        })()}
       </section>
     </div>
   )

@@ -13,8 +13,10 @@ export function DatosComprador() {
   )
 }
 
-export function MetodoPago({ valor, onChange }: { valor: string; onChange: (v: 'transferencia' | 'efectivo') => void }) {
-  const op = (v: 'transferencia' | 'efectivo', titulo: string, texto: string) => (
+export type Metodo = 'mercadopago' | 'transferencia'
+
+export function MetodoPago({ valor, onChange, conMP }: { valor: string; onChange: (v: Metodo) => void; conMP?: boolean }) {
+  const op = (v: Metodo, titulo: string, texto: string) => (
     <label className={`flex cursor-pointer gap-3 rounded-2xl p-4 ring-2 ${valor === v ? 'bg-secundario/40 ring-bosque' : 'ring-secundario'}`}>
       <input type="radio" name="metodo" value={v} checked={valor === v} onChange={() => onChange(v)} className="mt-1 size-5 accent-bosque" />
       <span><strong className="block">{titulo}</strong><span className="text-sm text-bosque/80">{texto}</span></span>
@@ -23,7 +25,19 @@ export function MetodoPago({ valor, onChange }: { valor: string; onChange: (v: '
   return (
     <fieldset className="space-y-2">
       <legend className="mb-1 text-sm font-bold">¿Cómo pagás?</legend>
-      {op('transferencia', 'Transferencia', 'Transferís al alias de Micelia y subís el comprobante. Cuando lo validamos, se activa.')}
+      {conMP && op('mercadopago', 'Mercado Pago', 'Tarjeta de crédito o débito, o dinero en cuenta. Tu entrada se activa apenas se aprueba el pago.')}
+      {op('transferencia', 'Transferencia (sin recargo)', 'Transferís al alias de Micelia y subís el comprobante. Cuando lo validamos, se activa.')}
     </fieldset>
   )
+}
+
+/** Pide a Mercado Pago el link de pago del pedido y redirige. Devuelve un mensaje de error si falla. */
+export async function irAMercadoPago(token: string): Promise<string | null> {
+  const { supabase } = await import('../lib/supabase')
+  const { data, error } = await supabase.functions.invoke('mp-preferencia', { body: { token } })
+  if (error || !data) return 'No pudimos conectar con Mercado Pago. Probá de nuevo desde tu pedido.'
+  if (data.pagado) return null
+  if (data.error) return data.error
+  if (data.url) { window.location.href = data.url; return null }
+  return 'No pudimos conectar con Mercado Pago.'
 }

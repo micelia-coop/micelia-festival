@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { irAMercadoPago } from '../../components/Checkout'
 import EstadoPedido from '../../components/EstadoPedido'
 import PagoTransferencia from '../../components/PagoTransferencia'
-import { Alerta, Card, LinkButton, Spinner } from '../../components/ui'
+import { Alerta, Button, Card, LinkButton, Spinner } from '../../components/ui'
 import { useConfig } from '../../lib/config'
 import { fechaHora, pesos } from '../../lib/format'
 import { rpc } from '../../lib/supabase'
@@ -14,9 +15,26 @@ export default function MiPedido() {
   const { config } = useConfig()
   const [p, setP] = useState<PedidoPublico | null | undefined>(undefined)
   const [error, setError] = useState('')
+  const [params] = useSearchParams()
+  const vuelveMP = params.get('mp')
+  const [yendo, setYendo] = useState(false)
+  const [errMP, setErrMP] = useState('')
 
   const cargar = useCallback(() => rpc<PedidoPublico | null>('ver_pedido', { p_token: token }).then(setP).catch((e) => setError(e.message)), [token])
   useEffect(() => { cargar() }, [cargar])
+
+  // Al volver de Mercado Pago, el aviso del pago puede tardar unos segundos: reconsultamos.
+  useEffect(() => {
+    if (!vuelveMP || vuelveMP === 'error' || !p || p.estado === 'pagado' || p.metodo_pago !== 'mercadopago') return
+    const t = setTimeout(() => { cargar() }, 3000)
+    return () => clearTimeout(t)
+  }, [vuelveMP, p, cargar])
+
+  async function pagarMP() {
+    setYendo(true); setErrMP('')
+    const err = await irAMercadoPago(token)
+    if (err) { setErrMP(err); setYendo(false) } else cargar()
+  }
 
   if (error) return <Alerta tipo="error">{error}</Alerta>
   if (p === undefined) return <Spinner />
@@ -65,6 +83,20 @@ export default function MiPedido() {
           <h2 className="text-xl font-bold">Tu reserva está hecha</h2>
           <p className="mt-1">Pagá {pesos(p.total)} en efectivo a una guardiana{p.tipo === 'entrada' ? ' o en la puerta del festival' : ''}, mencionando el código <strong>{p.codigo}</strong>.</p>
           {p.vence_at && <p className="mt-2 text-sm font-bold text-error">La reserva vence el {fechaHora(p.vence_at)} si no se paga.</p>}
+        </Card>
+      )}
+
+      {p.metodo_pago === 'mercadopago' && p.estado === 'pendiente' && (
+        <Card className="space-y-3">
+          {vuelveMP && vuelveMP !== 'error'
+            ? <Alerta>⏳ Estamos confirmando tu pago con Mercado Pago. Esta página se actualiza sola en unos segundos.</Alerta>
+            : <>
+                {vuelveMP === 'error' && <Alerta tipo="error">El pago no se completó. Podés intentarlo de nuevo.</Alerta>}
+                <h2 className="text-xl font-bold">Pagá con Mercado Pago</h2>
+                <p>Tu reserva se mantiene unas horas. Completá el pago para activar {p.tipo === 'entrada' ? 'tus entradas' : 'tu pedido'}.</p>
+                <Button grande disabled={yendo} onClick={pagarMP}>{yendo ? 'Abriendo Mercado Pago…' : `Pagar ${pesos(p.total)} con Mercado Pago`}</Button>
+                {errMP && <Alerta tipo="error">{errMP}</Alerta>}
+              </>}
         </Card>
       )}
 

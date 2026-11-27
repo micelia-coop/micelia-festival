@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DatosComprador, MetodoPago } from '../../components/Checkout'
+import { DatosComprador, irAMercadoPago, MetodoPago, type Metodo } from '../../components/Checkout'
 import { Alerta, Button, Card, Field, Input, Spinner, Textarea, Titulo } from '../../components/ui'
 import { useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
@@ -21,7 +21,9 @@ export default function BolsaRitual() {
   const [cantExtra, setCantExtra] = useState<Record<string, number>>({})
   const [regalo, setRegalo] = useState(false)
   const [entrega, setEntrega] = useState<'retiro_petruca' | 'retiro_festival'>('retiro_petruca')
-  const [metodo, setMetodo] = useState<'transferencia' | 'efectivo'>('transferencia')
+  const [metodo, setMetodo] = useState<Metodo>('transferencia')
+  const conMP = config.ventas.mercadopago === true
+  useEffect(() => { if (conMP) setMetodo('mercadopago') }, [conMP])
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const abiertas = config.ventas.bolsas_abiertas === true
@@ -60,6 +62,11 @@ export default function BolsaRitual() {
         p_es_regalo: regalo, p_regalo_para: f.get('regalo_para'), p_regalo_mensaje: f.get('regalo_mensaje'), p_entrega: entrega,
         p_instagram: f.get('instagram'),
       })
+      if (metodo === 'mercadopago') {
+        const err = await irAMercadoPago(r.token)
+        if (err) nav(`/p/${r.token}`)
+        return
+      }
       nav(`/p/${r.token}`)
     } catch (err) { setError((err as Error).message); setEnviando(false) }
   }
@@ -145,7 +152,7 @@ export default function BolsaRitual() {
               ))}
             </fieldset>
             <DatosComprador />
-            <MetodoPago valor={metodo} onChange={setMetodo} />
+            <MetodoPago valor={metodo} onChange={setMetodo} conMP={conMP} />
             <div className="space-y-1 border-t border-secundario pt-3 text-sm">
               <p className="flex justify-between"><span>{cantBolsa} × {bolsa.nombre}</span><span>{pesos(cantBolsa * bolsa.precio_base)}</span></p>
               {totalExtras > 0 && <p className="flex justify-between"><span>Extras</span><span>{pesos(totalExtras)}</span></p>}

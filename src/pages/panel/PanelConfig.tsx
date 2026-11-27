@@ -24,6 +24,7 @@ const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
   { clave: 'ventas', titulo: 'Ventas', campos: [
     { k: 'entradas_abiertas', label: 'Venta de entradas abierta', tipo: 'bool' },
     { k: 'bolsas_abiertas', label: 'Venta de Bolsa Ritual abierta', tipo: 'bool' },
+    { k: 'mercadopago', label: 'Ofrecer pago con Mercado Pago (además de transferencia)', tipo: 'bool' },
     { k: 'mensaje_cerrado', label: 'Mensaje cuando la venta está cerrada', tipo: 'largo' },
   ] },
   { clave: 'pago', titulo: 'Datos para transferir', campos: [

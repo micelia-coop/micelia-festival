@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DatosComprador, MetodoPago } from '../../components/Checkout'
+import { DatosComprador, irAMercadoPago, MetodoPago, type Metodo } from '../../components/Checkout'
 import { Alerta, Button, Card, Spinner, Titulo } from '../../components/ui'
 import { useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
@@ -15,7 +15,9 @@ export default function Entradas() {
   const [tipos, setTipos] = useState<TipoEntrada[] | null>(null)
   const [cant, setCant] = useState<Record<string, number>>({})
   const [mats, setMats] = useState<Record<string, (boolean | null)[]>>({})
-  const [metodo, setMetodo] = useState<'transferencia' | 'efectivo'>('transferencia')
+  const [metodo, setMetodo] = useState<Metodo>('transferencia')
+  const conMP = config.ventas.mercadopago === true
+  useEffect(() => { if (conMP) setMetodo('mercadopago') }, [conMP])
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const abiertas = config.ventas.entradas_abiertas === true
@@ -46,6 +48,11 @@ export default function Entradas() {
           tipo_entrada_id: id, cantidad: n, mats: Array.from({ length: n }, (_, i) => mats[id]?.[i] ?? null),
         })),
       })
+      if (metodo === 'mercadopago') {
+        const err = await irAMercadoPago(r.token)
+        if (err) nav(`/p/${r.token}`)
+        return
+      }
       nav(`/p/${r.token}`)
     } catch (err) { setError((err as Error).message); setEnviando(false) }
   }
@@ -112,13 +119,13 @@ export default function Entradas() {
             <Card className="h-fit space-y-4 md:sticky md:top-24">
               <h2 className="text-xl font-bold">Tus datos</h2>
               <DatosComprador />
-              <MetodoPago valor={metodo} onChange={setMetodo} />
+              <MetodoPago valor={metodo} onChange={setMetodo} conMP={conMP} />
               <div className="flex items-baseline justify-between border-t border-secundario pt-3">
                 <span className="font-bold">Total</span>
                 <span className="font-display text-3xl font-bold">{pesos(total)}</span>
               </div>
               {error && <Alerta tipo="error">{error}</Alerta>}
-              <Button grande disabled={enviando || !nTotal}>{enviando ? 'Reservando…' : metodo === 'efectivo' ? 'Reservar' : 'Continuar al pago'}</Button>
+              <Button grande disabled={enviando || !nTotal}>{enviando ? 'Reservando…' : metodo === 'mercadopago' ? 'Ir a pagar con Mercado Pago' : 'Continuar al pago'}</Button>
             </Card>
           )}
         </form>

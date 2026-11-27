@@ -4,7 +4,7 @@ export type Festival = {
   telegram_url?: string | null; instagram_url?: string | null; whatsapp_contacto?: string | null
 }
 export type Pago = { billetera?: string; alias?: string | null; cvu?: string | null; titular?: string | null }
-export type Ventas = { entradas_abiertas?: boolean; bolsas_abiertas?: boolean; mensaje_cerrado?: string }
+export type Ventas = { entradas_abiertas?: boolean; bolsas_abiertas?: boolean; mensaje_cerrado?: string; mercadopago?: boolean }
 export type DesafioCfg = { titulo?: string; bajada?: string; gestiona?: string; consentimiento?: string; canal_url?: string; canal_texto?: string; instagram_respira?: string }
 export type Faq = { p: string; r: string }[]
 export type Sitio = {
@@ -47,7 +47,7 @@ export type PedidoEstado = 'pendiente' | 'comprobante_enviado' | 'pagado' | 'rec
 
 export type PedidoPublico = {
   codigo: string; token: string; tipo: 'entrada' | 'bolsa'; nombre: string; total: number
-  metodo_pago: 'transferencia' | 'efectivo'; estado: PedidoEstado; vence_at: string | null
+  metodo_pago: 'transferencia' | 'efectivo' | 'mercadopago'; estado: PedidoEstado; vence_at: string | null
   tiene_comprobante: boolean; es_regalo: boolean; regalo_para: string | null
   entrega: 'retiro_petruca' | 'retiro_festival' | null; entregado: boolean; created_at: string
   items: { item_tipo: string; nombre: string; cantidad: number; precio_unit: number }[]
