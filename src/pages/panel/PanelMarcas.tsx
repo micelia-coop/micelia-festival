@@ -18,13 +18,15 @@ async function subirImagen(bucket: string, carpeta: string, file: File): Promise
 
 export default function PanelMarcas() {
   const [marcas, setMarcas] = useState<Marca[] | null>(null)
-  const [filtro, setFiltro] = useState<(typeof ESTADOS)[number]>('postulada')
+  const [filtro, setFiltro] = useState<(typeof ESTADOS)[number]>('confirmada')
   const [sel, setSel] = useState<Marca | null>(null)
+  const [invitada, setInvitada] = useState<Marca | null>(null)
 
   const cargar = () => supabase.from('marcas').select('*').order('orden').order('nombre').then(({ data }) => setMarcas((data as Marca[]) ?? []))
   useEffect(() => { cargar() }, [])
 
   if (sel) return <EditorMarca marca={sel} onVolver={() => { setSel(null); cargar() }} />
+  if (invitada) return <InvitacionLista m={invitada} onVolver={() => { setInvitada(null); cargar() }} />
   const conteo = (e: string) => (marcas ?? []).filter((m) => m.estado === e).length
 
   async function nueva(conRegistro = false) {
@@ -33,24 +35,25 @@ export default function PanelMarcas() {
     const slug = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36).slice(-3)
     const { data, error } = await supabase.from('marcas').insert({ nombre, slug, estado: 'confirmada', participa_festival: true }).select('*').single()
     if (error) { alert(error.message); return }
-    let marca = data as Marca
+    const marca = data as Marca
     if (conRegistro) {
-      try { marca = { ...marca, registro_token: await rpc<string>('registro_generar', { p_marca_id: marca.id }), registro_abierto: true } }
-      catch (e) { alert((e as Error).message) }
+      try { setInvitada({ ...marca, registro_token: await rpc<string>('registro_generar', { p_marca_id: marca.id }), registro_abierto: true }) }
+      catch (e) { alert((e as Error).message); cargar() }
+      return
     }
     setSel(marca)
   }
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-3xl font-bold">Marcas</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-3xl font-bold">Marcas aliadas</h1>
         <div className="flex flex-wrap gap-2"><Button onClick={() => nueva(true)}>+ Invitar marca a registrarse</Button><Button variante="suave" onClick={() => nueva(false)}>+ Cargarla yo</Button></div></div>
-      <p className="text-sm text-bosque/70">“Invitar” genera un link privado para que la marca complete sus datos, logo y productos. El link no aparece en la web.</p>
+      <p className="text-sm text-bosque/70"><strong>Invitar:</strong> ponés solo el nombre y le mandás un link privado para que la marca complete sus datos, logo y productos. <strong>Cargarla yo:</strong> completás vos toda la ficha.</p>
       <div className="flex gap-2">
         {ESTADOS.map((e) => (
           <button key={e} onClick={() => setFiltro(e)} aria-pressed={filtro === e}
             className={`rounded-full px-4 py-2 text-sm font-bold capitalize ${filtro === e ? 'bg-bosque text-white' : 'bg-secundario/60'}`}>
-            {e}s ({conteo(e)})
+            {{ postulada: 'Postuladas', confirmada: 'Confirmadas', rechazada: 'Rechazadas' }[e]} ({conteo(e)})
           </button>
         ))}
       </div>
@@ -93,13 +96,20 @@ function EditorMarca({ marca, onVolver }: { marca: Marca; onVolver: () => void }
     catch (err) { setMsg({ tipo: 'error', t: (err as Error).message }) }
   }
 
+  async function eliminar() {
+    if (!confirm(`¿Eliminar "${m.nombre}" y todos sus productos? No se puede deshacer.`)) return
+    const { error } = await supabase.from('marcas').delete().eq('id', m.id)
+    if (error) { setMsg({ tipo: 'error', t: 'No se pudo eliminar: ' + error.message }); return }
+    onVolver()
+  }
+
   async function nuevoProducto() {
     await supabase.from('productos').insert({ marca_id: m.id, nombre: 'Producto nuevo', orden: prods.length + 1 }); cargarProds()
   }
 
   return (
     <div className="space-y-5">
-      <button onClick={onVolver} className="font-bold underline">← Volver a marcas</button>
+      <button onClick={onVolver} className="font-bold underline">← Volver a marcas aliadas</button>
       <h1 className="text-3xl font-bold">{m.nombre}</h1>
       <div className="flex flex-wrap gap-2">
         {ESTADOS.map((e) => (
@@ -128,6 +138,12 @@ function EditorMarca({ marca, onVolver }: { marca: Marca; onVolver: () => void }
       <RegistroPrivado m={m} onCambio={(c) => setM((x) => ({ ...x, ...c }))} />
       {msg && <Alerta tipo={msg.tipo}>{msg.t}</Alerta>}
       <Button grande onClick={guardar}>Guardar marca</Button>
+
+      <Card className="space-y-2 ring-error/40">
+        <h2 className="text-lg font-bold">Eliminar marca</h2>
+        <p className="text-sm">Borra la marca y todos sus productos. No se puede deshacer. Si solo no va a participar, podés marcarla como <strong>Rechazada</strong>.</p>
+        <Button variante="peligro" onClick={eliminar}>Eliminar {m.nombre}</Button>
+      </Card>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between"><h2 className="text-2xl font-bold">Productos</h2><Button variante="suave" onClick={nuevoProducto}>+ Producto</Button></div>
@@ -187,7 +203,7 @@ function RegistroPrivado({ m, onCambio }: { m: Marca; onCambio: (c: Partial<Marc
   const [msg, setMsg] = useState('')
   const url = m.registro_token ? `${origen()}/registro/${m.registro_token}` : ''
   const contacto = m.registro_extra?.contacto_whatsapp || m.whatsapp
-  const texto = `¡Hola! 🌿 Te compartimos el link para completar el registro de ${m.nombre} en el Festival de Solsticio de Micelia: ${url}\n\nAhí podés cargar tus datos, logo y productos. Podés volver a entrar y editarlo cuando quieras.`
+  const texto = textoInvitacion(m.nombre, url)
 
   async function generar() {
     try { onCambio({ registro_token: await rpc<string>('registro_generar', { p_marca_id: m.id }), registro_abierto: true }) }
@@ -201,7 +217,7 @@ function RegistroPrivado({ m, onCambio }: { m: Marca; onCambio: (c: Partial<Marc
 
   return (
     <Card className="space-y-3" acento="var(--color-arcilla)">
-      <h2 className="text-xl font-bold">Registro privado de la marca</h2>
+      <h2 className="text-xl font-bold">Link de registro para la marca</h2>
       {!m.registro_token || !m.registro_abierto ? (
         <>
           <p className="text-sm">{m.registro_token ? 'El link está cerrado: la marca no puede editar.' : 'Generá un link para que la marca complete sus datos, logo y productos.'}</p>
@@ -227,5 +243,31 @@ function RegistroPrivado({ m, onCambio }: { m: Marca; onCambio: (c: Partial<Marc
       )}
       {msg && <p className="text-sm font-bold">{msg}</p>}
     </Card>
+  )
+}
+
+const textoInvitacion = (nombre: string, url: string) =>
+  `¡Hola! 🌿 Te compartimos el link para completar el registro de ${nombre} en el Festival de Solsticio de Micelia: ${url}\n\nAhí podés cargar tus datos, logo y productos. Podés volver a entrar y editarlo cuando quieras.`
+
+function InvitacionLista({ m, onVolver }: { m: Marca; onVolver: () => void }) {
+  const [copiado, setCopiado] = useState(false)
+  const url = `${origen()}/registro/${m.registro_token}`
+  const copiar = () => navigator.clipboard?.writeText(url).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000) })
+  return (
+    <div className="mx-auto max-w-lg space-y-5">
+      <button onClick={onVolver} className="font-bold underline">← Volver a marcas aliadas</button>
+      <Card className="space-y-4" acento="var(--color-arcilla)">
+        <h1 className="text-2xl font-bold">Link listo para {m.nombre} 🌿</h1>
+        <p>Mandáselo a la marca: con ese link completa sus datos, logo y productos. Cuando lo complete, te llega un aviso por mail y la ves como <strong>✅ Registro completo</strong>.</p>
+        <p className="break-all rounded-xl bg-fondo p-3 font-mono text-xs">{url}</p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <a href={linkWa(null, textoInvitacion(m.nombre, url))} target="_blank" rel="noreferrer"
+            className="rounded-2xl bg-exito px-5 py-3 text-center font-bold text-white">📲 Enviar por WhatsApp</a>
+          <Button variante="suave" onClick={copiar}>{copiado ? '¡Copiado!' : 'Copiar link'}</Button>
+        </div>
+        <p className="text-sm text-bosque/70">Si lo necesitás de nuevo, entrá a la marca en la lista: el link queda guardado ahí.</p>
+      </Card>
+      <Button variante="borde" onClick={onVolver}>Listo, volver a la lista</Button>
+    </div>
   )
 }

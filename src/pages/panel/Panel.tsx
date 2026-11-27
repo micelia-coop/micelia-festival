@@ -16,7 +16,7 @@ const MiCuenta = lazy(() => import('./MiCuenta'))
 const SECCIONES: { to: string; label: string; rol: Rol | null }[] = [
   { to: '', label: 'Inicio', rol: null },
   { to: 'pagos', label: 'Pagos', rol: 'admin' },
-  { to: 'marcas', label: 'Marcas', rol: 'alianzas' },
+  { to: 'marcas', label: 'Marcas aliadas', rol: 'alianzas' },
   { to: 'desafio', label: 'Desafío', rol: 'desafio' },
   { to: 'avisos', label: 'Avisos', rol: 'admin' },
   { to: 'config', label: 'Configuración', rol: 'admin' },
