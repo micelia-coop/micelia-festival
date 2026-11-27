@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Avisos from '../../components/Avisos'
+import { BotonRed, IconoInstagram, IconoTelegram, urlInstagram } from '../../components/Iconos'
 import CuentaRegresiva from '../../components/CuentaRegresiva'
 import { useConfig } from '../../lib/config'
 import { diaLocal, fechaLarga } from '../../lib/format'
@@ -38,6 +39,10 @@ function Teaser() {
             <Link to="/desafio" className="inline-block rounded-2xl bg-lavanda px-6 py-4 text-lg font-bold text-bosque">
               Sumarme al Desafío de Gratitud
             </Link>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            {urlInstagram(config.festival.instagram_url) && <BotonRed claro href={urlInstagram(config.festival.instagram_url)!} etiqueta="Instagram de Micelia"><IconoInstagram /></BotonRed>}
+            <BotonRed claro href={config.festival.telegram_url || 'https://t.me/miceliacomunidad'} etiqueta="Comunidad de Micelia en Telegram"><IconoTelegram /></BotonRed>
           </div>
         </div>
       </section>

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useConfig } from '../lib/config'
 import { supabaseConfigurado } from '../lib/supabase'
 import type { Sitio } from '../lib/types'
+import { BotonRed, IconoInstagram, IconoTelegram, urlInstagram } from './Iconos'
 
 const NAV: { to: string; label: string; flag?: keyof Sitio }[] = [
   { to: '/desafio', label: 'Desafío 21 días' },
@@ -63,11 +64,11 @@ export default function Layout() {
       </main>
 
       <footer className="bg-bosque px-4 py-8 text-sm text-crema/90">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:justify-between">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p><strong>{config.festival.organiza ?? 'Micelia Cooperativa'}</strong>{!config.sitio.teaser && ' · Festival cero papel 🌱'}</p>
-          <div className="flex flex-wrap gap-4">
-            {config.festival.instagram_url && <a className="underline" href={config.festival.instagram_url} target="_blank" rel="noreferrer">Instagram</a>}
-            {config.festival.telegram_url && <a className="underline" href={config.festival.telegram_url} target="_blank" rel="noreferrer">Telegram</a>}
+          <div className="flex flex-wrap items-center gap-4">
+            {urlInstagram(config.festival.instagram_url) && <BotonRed claro href={urlInstagram(config.festival.instagram_url)!} etiqueta="Instagram de Micelia"><IconoInstagram /></BotonRed>}
+            <BotonRed claro href={config.festival.telegram_url || 'https://t.me/miceliacomunidad'} etiqueta="Comunidad de Micelia en Telegram"><IconoTelegram /></BotonRed>
             {config.sitio.mostrar_info && <Link className="underline" to="/info">Info y FAQ</Link>}
             <Link className="underline opacity-70" to="/panel">Guardianas</Link>
           </div>

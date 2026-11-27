@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Alerta, Button, Card, Field, Input, Select, Titulo } from '../../components/ui'
+import { BotonRed, IconoInstagram, urlInstagram } from '../../components/Iconos'
 import { useConfig } from '../../lib/config'
 import { diaLocal, fechaCorta } from '../../lib/format'
 import { rpc } from '../../lib/supabase'
@@ -21,7 +22,15 @@ export default function Desafio() {
 
   return (
     <div className="space-y-8">
-      <Titulo acento="var(--color-lavanda)" bajada={d.bajada}>{d.titulo ?? 'Desafío de Gratitud · 21 días'}</Titulo>
+      <div>
+        <Titulo acento="var(--color-lavanda)" bajada={d.bajada}>{d.titulo ?? 'Desafío de Gratitud · 21 días'}</Titulo>
+        {urlInstagram(d.instagram_respira) && (
+          <div className="-mt-3 flex items-center gap-3">
+            <BotonRed href={urlInstagram(d.instagram_respira)!} etiqueta={`Instagram de ${d.gestiona ?? 'Respira y Transfórmate'}`}><IconoInstagram /></BotonRed>
+            <span className="text-sm font-semibold text-bosque/80">Con {d.gestiona ?? 'Respira y Transfórmate'}</span>
+          </div>
+        )}
+      </div>
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
         <Inscripcion consentimiento={d.consentimiento} gestiona={d.gestiona}
           canalUrl={d.canal_url ?? 'https://t.me/miceliacomunidad/85'} canalTexto={d.canal_texto ?? 'Sumate al Canal de Respira y Transfórmate'} />
