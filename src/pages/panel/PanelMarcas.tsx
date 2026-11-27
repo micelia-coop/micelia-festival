@@ -53,6 +53,7 @@ export default function PanelMarcas() {
         <div className="flex flex-wrap gap-2"><Button onClick={() => nueva(true)}>+ Invitar marca a registrarse</Button><Button variante="suave" onClick={() => nueva(false)}>+ Cargarla yo</Button></div></div>
       <p className="text-sm text-bosque/70"><strong>Invitar:</strong> ponés solo el nombre y le mandás un link privado para que la marca complete sus datos, logo y productos. <strong>Cargarla yo:</strong> completás vos toda la ficha.</p>
       <InvitarSponsor />
+      <FormulariosNivel />
       <EditorPropuesta />
       <div className="flex gap-2">
         {ESTADOS.map((e) => (
@@ -401,6 +402,41 @@ function EditorPropuesta() {
         </fieldset>
         {msg && <Alerta tipo={msg.tipo}>{msg.t}</Alerta>}
         <div className="sticky bottom-3"><Button grande disabled={guardando} onClick={guardar}>{guardando ? 'Guardando…' : 'Guardar textos de la propuesta'}</Button></div>
+      </div>
+    </details>
+  )
+}
+
+function FormulariosNivel() {
+  const { config } = useConfig()
+  const p = propuestaCompleta(config.propuesta)
+  const [nombre, setNombre] = useState('')
+  const [copiado, setCopiado] = useState('')
+  const slugs = ['semilla', 'raiz', 'copa']
+  return (
+    <details className="rounded-3xl bg-superficie p-4 ring-1 ring-secundario/60">
+      <summary className="cursor-pointer text-lg font-bold">📝 Formularios por nivel (para marcas con las que ya hablaste)</summary>
+      <div className="mt-3 space-y-3">
+        <p className="text-sm text-bosque/80">Cada link abre un formulario solo para ese nivel. Lo que completen llega a <strong>Postuladas</strong> con el nivel y sus respuestas, y te llega el aviso por mail.</p>
+        <Input placeholder="Nombre de la persona (para el mensaje, opcional)" value={nombre} onChange={(e) => setNombre(e.target.value)} aria-label="Nombre de la persona" />
+        {p.niveles.map((n, i) => {
+          const url = `${origen()}/postular/${slugs[i]}`
+          const msj = `¡Hola${nombre.trim() ? ' ' + nombre.trim() : ''}! 🌿 Como charlamos, te paso el formulario para sumarte al Festival de Solsticio como nivel ${n.nombre}: ${url}\n\nCualquier duda me escribís.`
+          return (
+            <div key={i} className="space-y-2 rounded-2xl bg-fondo p-3">
+              <p className="font-bold">{['🌱', '🌿', '🌳'][i]} Nivel {n.nombre}</p>
+              <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} aria-label={`Link nivel ${n.nombre}`} className="w-full rounded-xl bg-white p-2 font-mono text-xs" />
+              <div className="flex flex-wrap gap-2">
+                <a href={linkWa(null, msj)} target="_blank" rel="noreferrer" className="rounded-2xl bg-exito px-4 py-2 text-sm font-bold text-white">📲 Enviar por WhatsApp</a>
+                <Button variante="suave" className="!py-2 text-sm" onClick={async () => { setCopiado(await copiarTexto(url) ? slugs[i] : 'error'); setTimeout(() => setCopiado(''), 3000) }}>
+                  {copiado === slugs[i] ? '¡Copiado!' : 'Copiar link'}
+                </Button>
+                <a href={`/postular/${slugs[i]}`} target="_blank" rel="noreferrer" className="self-center text-sm font-bold underline">Ver ↗</a>
+              </div>
+            </div>
+          )
+        })}
+        {copiado === 'error' && <p className="text-sm font-bold text-error">Tu navegador no dejó copiar: tocá el link, seleccionalo y copialo a mano.</p>}
       </div>
     </details>
   )

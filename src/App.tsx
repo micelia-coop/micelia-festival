@@ -17,6 +17,7 @@ const SumaTuMarca = lazy(() => import('./pages/public/SumaTuMarca'))
 const Info = lazy(() => import('./pages/public/Info'))
 const Registro = lazy(() => import('./pages/public/Registro'))
 const Propuesta = lazy(() => import('./pages/public/Propuesta'))
+const PostularNivel = lazy(() => import('./pages/public/PostularNivel'))
 const NoEncontrado = lazy(() => import('./pages/public/NoEncontrado'))
 const Panel = lazy(() => import('./pages/panel/Panel'))
 
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="registro/:token" element={<Registro />} />
           <Route path="marcas-aliadas" element={<Seccion flag={['mostrar_propuesta', 'mostrar_marcas']}><Propuesta /></Seccion>} />
           <Route path="propuesta" element={<Navigate to="/marcas-aliadas" replace />} />
+          <Route path="postular/:nivel" element={<PostularNivel />} />
           <Route path="info" element={<Seccion flag="mostrar_info"><Info /></Seccion>} />
           <Route path="*" element={<NoEncontrado />} />
         </Route>
