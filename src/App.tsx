@@ -21,10 +21,11 @@ const NoEncontrado = lazy(() => import('./pages/public/NoEncontrado'))
 const Panel = lazy(() => import('./pages/panel/Panel'))
 
 /** Muestra la sección solo si está habilitada en Configuración → Sitio público; si no, vuelve al inicio. */
-function Seccion({ flag, children }: { flag: keyof Sitio; children: React.ReactNode }) {
+function Seccion({ flag, children }: { flag: keyof Sitio | (keyof Sitio)[]; children: React.ReactNode }) {
   const { config, cargando } = useConfig()
   if (cargando) return <Spinner />
-  return config.sitio[flag] ? <>{children}</> : <Navigate to="/" replace />
+  const flags = Array.isArray(flag) ? flag : [flag]
+  return flags.some((f) => config.sitio[f]) ? <>{children}</> : <Navigate to="/" replace />
 }
 
 function ScrollArriba() {
@@ -47,9 +48,9 @@ export default function App() {
           <Route path="marcas" element={<Seccion flag="mostrar_marcas"><Marcas /></Seccion>} />
           <Route path="marcas/:slug" element={<Seccion flag="mostrar_marcas"><MarcaFicha /></Seccion>} />
           <Route path="bolsa-ritual" element={<Seccion flag="mostrar_bolsa"><BolsaRitual /></Seccion>} />
-          <Route path="suma-tu-marca" element={<Seccion flag="mostrar_postulacion"><SumaTuMarca /></Seccion>} />
+          <Route path="suma-tu-marca" element={<Seccion flag={['mostrar_postulacion', 'mostrar_propuesta']}><SumaTuMarca /></Seccion>} />
           <Route path="registro/:token" element={<Registro />} />
-          <Route path="propuesta" element={<Propuesta />} />
+          <Route path="propuesta" element={<Seccion flag="mostrar_propuesta"><Propuesta /></Seccion>} />
           <Route path="info" element={<Seccion flag="mostrar_info"><Info /></Seccion>} />
           <Route path="*" element={<NoEncontrado />} />
         </Route>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { BotonRed, IconoInstagram, IconoTelegram, urlInstagram } from '../../components/Iconos'
 import { useConfig } from '../../lib/config'
 
@@ -114,8 +115,10 @@ export default function Propuesta() {
       </section>
 
       <section className="mx-auto max-w-xl space-y-4 rounded-3xl bg-bosque p-8 text-center text-crema">
-        <h2 className="text-2xl font-bold">¿Lo conversamos?</h2>
-        <p className="text-crema/90">Escribinos y te contamos cómo sumarte. 🌿</p>
+        <h2 className="text-2xl font-bold">¿Querés ser parte?</h2>
+        <p className="text-crema/90">Contanos sobre tu marca o proyecto y qué nivel te interesa. El equipo de Alianzas te escribe. 🌿</p>
+        <Link to="/suma-tu-marca" className="inline-block rounded-2xl bg-acento px-8 py-4 text-lg font-bold uppercase tracking-wide text-bosque">Postularme</Link>
+        <p className="pt-2 text-sm text-crema/80">¿Dudas? Escribinos:</p>
         <div className="flex justify-center gap-3">
           {ig && <BotonRed claro href={ig} etiqueta="Instagram de Micelia"><IconoInstagram /></BotonRed>}
           <BotonRed claro href={tg} etiqueta="Telegram de Micelia"><IconoTelegram /></BotonRed>

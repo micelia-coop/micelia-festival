@@ -7,10 +7,10 @@ import { BotonRed, IconoInstagram, IconoTelegram, urlInstagram } from './Iconos'
 
 const NAV: { to: string; label: string; flag?: keyof Sitio }[] = [
   { to: '/desafio', label: 'Desafío 21 días' },
+  { to: '/propuesta', label: 'Sé parte', flag: 'mostrar_propuesta' },
   { to: '/entradas', label: 'Entradas', flag: 'mostrar_entradas' },
   { to: '/bolsa-ritual', label: 'Bolsa Ritual', flag: 'mostrar_bolsa' },
   { to: '/marcas', label: 'Guía de regalos', flag: 'mostrar_marcas' },
-  { to: '/suma-tu-marca', label: 'Sumá tu marca', flag: 'mostrar_postulacion' },
   { to: '/info', label: 'Info y FAQ', flag: 'mostrar_info' },
 ]
 

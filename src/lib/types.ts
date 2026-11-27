@@ -10,7 +10,7 @@ export type Faq = { p: string; r: string }[]
 export type Sitio = {
   teaser: boolean
   mostrar_entradas: boolean; mostrar_bolsa: boolean; mostrar_marcas: boolean
-  mostrar_postulacion: boolean; mostrar_info: boolean; mostrar_recorrido: boolean
+  mostrar_postulacion: boolean; mostrar_info: boolean; mostrar_recorrido: boolean; mostrar_propuesta: boolean
   teaser_kicker?: string; teaser_titulo?: string; teaser_bajada?: string
   teaser_fecha_label?: string; teaser_fecha?: string; cuenta_hasta?: string
 }

@@ -40,6 +40,11 @@ function Teaser() {
               Sumarme al Desafío de Gratitud
             </Link>
           </div>
+          {t.mostrar_propuesta && (
+            <Link to="/propuesta" className="inline-block font-semibold text-tierra underline decoration-2 underline-offset-4">
+              ¿Tenés una marca o proyecto? Sé parte del festival →
+            </Link>
+          )}
           <div className="flex items-center justify-center gap-3 pt-2">
             {urlInstagram(config.festival.instagram_url) && <BotonRed claro href={urlInstagram(config.festival.instagram_url)!} etiqueta="Instagram de Micelia"><IconoInstagram /></BotonRed>}
             <BotonRed claro href={config.festival.telegram_url || 'https://t.me/miceliacomunidad'} etiqueta="Comunidad de Micelia en Telegram"><IconoTelegram /></BotonRed>

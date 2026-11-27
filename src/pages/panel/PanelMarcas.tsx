@@ -68,6 +68,7 @@ export default function PanelMarcas() {
                 <p className="text-sm">{m.rubro ?? 'Sin rubro'} {m.en_guia_regalos && '· 🎁 guía'} {m.participa_festival && '· 🌿 festival'}</p>
                 {m.registro_token && <p className="mt-1 text-xs font-bold">{m.registro_completado_at ? '✅ Registro completo' : '⏳ Registro pendiente'}{!m.registro_abierto && ' · link cerrado'}</p>}
                 {m.estado === 'postulada' && <p className="mt-1 text-xs text-bosque/70">Postulada {m.created_at ? fechaHora(m.created_at) : ''} · {m.contacto_interno}</p>}
+                {m.notas_internas?.match(/^Nivel: (.+)$/m) && <p className="mt-1 text-xs font-bold">Nivel: {m.notas_internas.match(/^Nivel: (.+)$/m)![1]}</p>}
               </Card>
             </button></li>
           ))}
