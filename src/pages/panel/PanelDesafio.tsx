@@ -29,7 +29,7 @@ export default function PanelDesafio() {
   }
 
   async function correrFechas() {
-    const inicio = prompt('Fecha del día 1 (AAAA-MM-DD):', dias?.[0]?.fecha)
+    const inicio = prompt('Fecha del Día 1 (AAAA-MM-DD). El Día 0 queda el día anterior:', dias?.find((d) => d.dia === 1)?.fecha)
     if (!inicio || !/^\d{4}-\d{2}-\d{2}$/.test(inicio)) return
     const base = new Date(`${inicio}T12:00:00Z`)
     for (const d of dias!) {
@@ -56,7 +56,7 @@ export default function PanelDesafio() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Los 21 días</h2>
+        <h2 className="text-2xl font-bold">Días del desafío (0 a 21)</h2>
         <Button variante="borde" onClick={correrFechas} disabled={!dias}>Cambiar fecha de inicio</Button>
       </div>
       {msg && <div className="sticky top-28 z-20"><Alerta tipo={msg.startsWith('Error') ? 'error' : 'exito'}>{msg}</Alerta></div>}
