@@ -24,7 +24,6 @@ export function MetodoPago({ valor, onChange }: { valor: string; onChange: (v: '
     <fieldset className="space-y-2">
       <legend className="mb-1 text-sm font-bold">¿Cómo pagás?</legend>
       {op('transferencia', 'Transferencia', 'Transferís al alias de Micelia y subís el comprobante. Cuando lo validamos, se activa.')}
-      {op('efectivo', 'Reservar y pagar en efectivo', 'Pagás en efectivo a una guardiana o en la puerta. La reserva vence a las 48 hs si no se paga.')}
     </fieldset>
   )
 }
