@@ -98,10 +98,12 @@ function EditorMarca({ marca, onVolver }: { marca: Marca; onVolver: () => void }
     catch (err) { setMsg({ tipo: 'error', t: (err as Error).message }) }
   }
 
+  const [borrar, setBorrar] = useState<'' | 'confirmar' | 'borrando' | string>('')
   async function eliminar() {
-    if (!confirm(`¿Eliminar "${m.nombre}" y todos sus productos? No se puede deshacer.`)) return
-    const { error } = await supabase.from('marcas').delete().eq('id', m.id)
-    if (error) { setMsg({ tipo: 'error', t: 'No se pudo eliminar: ' + error.message }); return }
+    setBorrar('borrando')
+    const { data, error } = await supabase.from('marcas').delete().eq('id', m.id).select('id')
+    if (error) { setBorrar('Error: ' + error.message); return }
+    if (!data || data.length === 0) { setBorrar('Error: no se borró ninguna marca (¿tenés el rol Alianzas o Admin?).'); return }
     onVolver()
   }
 
@@ -144,7 +146,20 @@ function EditorMarca({ marca, onVolver }: { marca: Marca; onVolver: () => void }
       <Card className="space-y-2 ring-error/40">
         <h2 className="text-lg font-bold">Eliminar marca</h2>
         <p className="text-sm">Borra la marca y todos sus productos. No se puede deshacer. Si solo no va a participar, podés marcarla como <strong>Rechazada</strong>.</p>
-        <Button variante="peligro" onClick={eliminar}>Eliminar {m.nombre}</Button>
+        {borrar === '' && <Button variante="peligro" onClick={() => setBorrar('confirmar')}>Eliminar {m.nombre}</Button>}
+        {borrar === 'confirmar' && (
+          <div className="space-y-2 rounded-2xl bg-error/10 p-3">
+            <p className="font-bold">¿Seguro? Se borra “{m.nombre}” con todos sus productos.</p>
+            <div className="flex flex-wrap gap-2">
+              <Button variante="peligro" onClick={eliminar}>Sí, eliminar</Button>
+              <Button variante="borde" onClick={() => setBorrar('')}>Cancelar</Button>
+            </div>
+          </div>
+        )}
+        {borrar === 'borrando' && <p className="font-bold">Eliminando…</p>}
+        {borrar.startsWith('Error') && (
+          <div className="space-y-2"><Alerta tipo="error">{borrar}</Alerta><Button variante="borde" onClick={() => setBorrar('')}>Volver a intentar</Button></div>
+        )}
       </Card>
 
       <section className="space-y-3">
