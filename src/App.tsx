@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import { Spinner } from './components/ui'
 import Inicio from './pages/public/Inicio'
 import { useConfig } from './lib/config'
+import { supabase } from './lib/supabase'
 import type { Sitio } from './lib/types'
 
 const Desafio = lazy(() => import('./pages/public/Desafio'))
@@ -24,9 +25,19 @@ const Panel = lazy(() => import('./pages/panel/Panel'))
 /** Muestra la sección solo si está habilitada en Configuración → Sitio público; si no, vuelve al inicio. */
 function Seccion({ flag, children }: { flag: keyof Sitio | (keyof Sitio)[]; children: React.ReactNode }) {
   const { config, cargando } = useConfig()
-  if (cargando) return <Spinner />
+  const [logueada, setLogueada] = useState<boolean | null>(null)
+  useEffect(() => { supabase.auth.getSession().then(({ data }) => setLogueada(!!data.session)) }, [])
+  if (cargando || logueada === null) return <Spinner />
   const flags = Array.isArray(flag) ? flag : [flag]
-  return flags.some((f) => config.sitio[f]) ? <>{children}</> : <Navigate to="/" replace />
+  if (flags.some((f) => config.sitio[f])) return <>{children}</>
+  // Las guardianas logueadas ven la sección oculta para probarla.
+  if (logueada) return (
+    <>
+      <div className="mb-4 rounded-2xl bg-alerta px-4 py-3 text-sm font-bold text-bosque">👀 Vista previa: esta sección está oculta para el público. La ves porque estás logueada en el panel.</div>
+      {children}
+    </>
+  )
+  return <Navigate to="/" replace />
 }
 
 function ScrollArriba() {
