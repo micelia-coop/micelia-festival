@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Alerta, Button, Card, Field, Input, Select, Textarea, Titulo } from '../../components/ui'
 import { useConfig } from '../../lib/config'
-import { lineas, propuestaCompleta } from '../../lib/propuesta'
+import { lineas, montoNivel, propuestaCompleta } from '../../lib/propuesta'
+import { copiarTexto } from '../../lib/copiar'
 import { rpc } from '../../lib/supabase'
 
 export const NIVELES_SLUG = ['semilla', 'raiz', 'copa'] as const
@@ -17,10 +18,25 @@ export default function PostularNivel() {
   const [ok, setOk] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
+  const [copiado, setCopiado] = useState('')
 
   if (i < 0) return <Alerta tipo="error">Este formulario no existe. Revisá el link o mirá la <Link to="/marcas-aliadas" className="underline">propuesta</Link>.</Alerta>
   const n = p.niveles[i]
   const compromisos = lineas(n.aportas).filter((x) => !/^opcional/i.test(x))
+  const monto = montoNivel(n.aportas)
+  const copiarAlias = async () => { setCopiado(await copiarTexto(p.pago_alias) ? 'si' : 'no'); setTimeout(() => setCopiado(''), 3000) }
+  const Pago = () => monto ? (
+    <Card className="space-y-3" acento="var(--color-exito)">
+      <h2 className="text-xl font-bold">💸 Pago</h2>
+      <p>Transferí <strong>{monto}</strong> al alias de Micelia dentro de las <strong>{p.pago_plazo}</strong> de enviar este formulario:</p>
+      <div className="flex items-center justify-between gap-2 rounded-2xl bg-fondo px-4 py-3">
+        <div><p className="text-xs font-bold uppercase text-bosque/70">Alias (Mercado Pago)</p><p className="text-lg font-bold">{p.pago_alias}</p></div>
+        <Button type="button" variante="suave" className="!px-3 !py-2 text-sm" onClick={copiarAlias}>{copiado === 'si' ? '¡Copiado!' : 'Copiar'}</Button>
+      </div>
+      {copiado === 'no' && <p className="text-sm font-bold text-error">No se pudo copiar: anotalo a mano.</p>}
+      {p.pago_texto && <p className="text-sm">{p.pago_texto}</p>}
+    </Card>
+  ) : null
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,6 +57,7 @@ export default function PostularNivel() {
       `Nivel: ${n.nombre}`,
       'Origen: formulario de nivel (invitación de Alianzas)',
       `Se compromete a: ${compromisos.join(' · ')}`,
+      ...(monto ? [`Pago: ${monto} por transferencia al alias ${p.pago_alias} (${p.pago_plazo})`] : []),
       ...respuestas.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`),
     ].join('\n')
     setEnviando(true); setError('')
@@ -59,7 +76,8 @@ export default function PostularNivel() {
   if (ok) return (
     <Card className="mx-auto max-w-xl" acento={COLOR[i]}>
       <h1 className="text-2xl font-bold">¡Gracias por sumarte como {n.nombre}! {EMOJI[i]}</h1>
-      <p className="mt-2">Recibimos tus datos. El equipo de Alianzas de Micelia te escribe para coordinar los próximos pasos.</p>
+      <p className="mt-2">Recibimos tus datos. {monto ? 'Te mandamos un mail con los datos de pago.' : 'El equipo de Alianzas de Micelia te escribe para coordinar los próximos pasos.'}</p>
+      {monto && <div className="mt-4"><Pago /></div>}
     </Card>
   )
 
@@ -116,9 +134,11 @@ export default function PostularNivel() {
           <Field label="Comentarios"><Textarea name="comentarios" rows={2} /></Field>
         </Card>
 
+        <Pago />
+
         <Card className="space-y-2">
           <h2 className="text-xl font-bold">Compromiso</h2>
-          {[...compromisos, ...(n.nota ? [n.nota] : [])].map((c) => (
+          {[...compromisos, ...(n.nota ? [n.nota] : []), ...(monto ? [`pagar ${monto} dentro de las ${p.pago_plazo}`] : [])].map((c) => (
             <label key={c} className="flex gap-3"><input type="checkbox" required className="mt-1 size-5 shrink-0 accent-bosque" /><span>Me comprometo a: <strong>{c}</strong></span></label>
           ))}
         </Card>

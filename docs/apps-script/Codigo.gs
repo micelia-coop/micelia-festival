@@ -17,6 +17,7 @@
 
 const SITIO = 'https://festival-micelia.pages.dev';
 const FIRMA = 'Micelia Cooperativa';
+const CANAL_TELEGRAM = 'https://t.me/miceliacomunidad/85';
 
 // ============================== TEXTOS ==============================
 
@@ -31,7 +32,9 @@ const TEXTOS = {
       <p>Cada día se habilita un video nuevo, cortito, para practicar la gratitud a tu ritmo.
       Los vas a encontrar acá:</p>
       ${boton(SITIO + '/desafio', 'Ir al desafío')}
-      <p>Te recomendamos guardar ese link y elegir un momento del día para tu práctica.</p>
+      <p>Te recomendamos guardar ese link y elegir un momento del día para tu práctica.
+      Y sumate al canal de Telegram, donde te vamos avisando cada día:</p>
+      ${boton(CANAL_TELEGRAM, 'Sumate al Canal de Respira y Transfórmate')}
       <p>Y guardá esta fecha: el <b>sábado 19 de diciembre</b> cerramos el ciclo celebrando
       en comunidad en el <b>Festival de Solsticio</b>. Muy pronto te contamos más.</p>
       <p>Con gratitud,<br>${FIRMA}</p>`,
@@ -40,11 +43,33 @@ const TEXTOS = {
       Ciudad: d.ciudad, '¿Cómo se enteró?': d.como_se_entero, 'Total de inscriptas': d.total_inscriptas }),
   }),
 
-  marca_postulacion: (d) => ({
-    aviso: `Nueva postulación de marca: ${d.nombre}`,
+  marca_postulacion: (d) => {
+    const nivel = campo(d.mensaje, 'Nivel');
+    const pago = campo(d.mensaje, 'Pago');
+    const deFormNivel = /formulario de nivel/i.test(d.mensaje || '');
+    const aliasM = (pago || '').match(/alias\s+(\S+)/i);
+    const montoM = (pago || '').match(/\$\s?[\d.]+/);
+    const plazoM = (pago || '').match(/\(([^)]+)\)\s*$/);
+    return {
+    para: emailDe(d.contacto),
+    asunto: deFormNivel && nivel && nivel !== 'a definir' ? `¡Gracias por sumarte como ${nivel} al Festival de Solsticio! 🌿` : 'Recibimos tu postulación al Festival de Solsticio 🌿',
+    cuerpo: `
+      <p>¡Hola ${nombre(d.contacto)}!</p>
+      <p>Recibimos los datos de <b>${esc(d.nombre)}</b>${deFormNivel && nivel ? ` para sumarse como <b>nivel ${esc(nivel)}</b>` : ''}
+      al <b>Festival de Solsticio</b> del sábado 19 de diciembre. ¡Gracias!</p>
+      ${pago ? `
+        <p><b>Para confirmar tu lugar</b>, transferí <b>${montoM ? montoM[0] : ''}</b> al alias
+        <b>${aliasM ? esc(aliasM[1]) : ''}</b> (Mercado Pago de Micelia) dentro de las <b>${plazoM ? esc(plazoM[1]) : '24 hs'}</b>.</p>
+        <p>En el concepto poné el nombre de tu marca, y mandanos el comprobante <b>respondiendo este mail</b>.</p>`
+      : `<p>El equipo de Alianzas de Micelia te va a escribir para coordinar los próximos pasos.</p>`}
+      <p>Mientras tanto podés releer la propuesta completa acá:</p>
+      ${boton(SITIO + '/marcas-aliadas', 'Ver la propuesta')}
+      <p>Con gratitud,<br>${FIRMA}</p>`,
+    aviso: `Nueva postulación${nivel ? ' (' + nivel + ')' : ''}: ${d.nombre}`,
     avisoCuerpo: lista({ Marca: d.nombre, Rubro: d.rubro, Instagram: ig(d.instagram), WhatsApp: d.whatsapp,
       Contacto: d.contacto, Descripción: d.descripcion, Mensaje: d.mensaje }) + boton(SITIO + '/panel/marcas', 'Ver en el panel'),
-  }),
+    };
+  },
 
   marca_registro: (d) => ({
     // A la marca solo le escribimos la primera vez que completa el registro
@@ -165,7 +190,7 @@ function doPost(e) {
     if (!plantilla) return respuesta('evento desconocido');
     const d = pedido.datos || {};
     const t = plantilla(d);
-    const destinatario = d.email || d.contacto_email;
+    const destinatario = t.para || d.email || d.contacto_email;
     if (t.asunto && destinatario) enviar(destinatario, t.asunto, t.cuerpo);
     if (t.aviso) enviar(casillaAvisos(), '[Festival] ' + t.aviso, t.avisoCuerpo || '');
     return respuesta('ok');
@@ -198,7 +223,16 @@ function respuesta(t) { return ContentService.createTextOutput(t); }
 
 // ---------- ayudas de formato ----------
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-function nombre(s) { return esc(String(s || '').trim().split(' ')[0] || ''); }
+/** Valor de una línea "Clave: valor" dentro de un texto. */
+function campo(texto, clave) {
+  const m = String(texto || '').match(new RegExp('^' + clave + ':\\s*(.+)$', 'mi'));
+  return m ? m[1].trim() : null;
+}
+function emailDe(texto) {
+  const m = String(texto || '').match(/[^\s@·]+@[^\s@·]+\.[^\s@·]+/);
+  return m ? m[0] : null;
+}
+function nombre(s) { return esc(String(s || '').trim().split(/[\s·]+/)[0] || ''); }
 function pesos(n) { return n == null ? '—' : '$ ' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 function ig(u) { return u ? '@' + u + ' (instagram.com/' + u + ')' : null; }
 function boton(url, texto) {

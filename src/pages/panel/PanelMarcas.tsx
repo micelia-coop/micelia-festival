@@ -349,6 +349,10 @@ const CAMPOS_P: { titulo: string; campos: CampoP[] }[] = [
   { titulo: 'Cierre', campos: [
     { k: 'cta_titulo', label: 'Título' }, { k: 'cta_texto', label: 'Texto', largo: true }, { k: 'cta_boton', label: 'Botón' }, { k: 'cta_dudas', label: 'Texto sobre los íconos' },
   ] },
+  { titulo: 'Pago de los niveles (Raíz y Copa)', campos: [
+    { k: 'pago_alias', label: 'Alias para transferir', hint: 'Ej: miceliacoop.mp' }, { k: 'pago_plazo', label: 'Plazo para pagar', hint: 'Ej: 24 hs' },
+    { k: 'pago_texto', label: 'Indicaciones', largo: true },
+  ] },
   { titulo: 'Mensaje de invitación (WhatsApp)', campos: [
     { k: 'mensaje_invitacion', label: 'Mensaje', largo: true, hint: 'Usá {nombre}, {proyecto} y {link}: se reemplazan solos' },
   ] },

@@ -7,6 +7,7 @@ export type PropuestaTxt = {
   stand_titulo: string; stand_traer: string; brinda_titulo: string; brinda: string; lluvia: string
   marcas_titulo: string; cta_titulo: string; cta_texto: string; cta_boton: string; cta_dudas: string
   mensaje_invitacion: string
+  pago_alias: string; pago_plazo: string; pago_texto: string
 }
 
 export const PROPUESTA_DEFAULT: PropuestaTxt = {
@@ -33,6 +34,9 @@ export const PROPUESTA_DEFAULT: PropuestaTxt = {
   cta_texto: 'Contanos sobre tu marca o proyecto y qué nivel te interesa. El equipo de Alianzas te escribe. 🌿',
   cta_boton: 'Postularme',
   cta_dudas: '¿Dudas? Escribinos:',
+  pago_alias: 'miceliacoop.mp',
+  pago_plazo: '24 hs',
+  pago_texto: 'En el concepto de la transferencia poné el nombre de tu marca. Después mandanos el comprobante respondiendo el mail de confirmación.',
   mensaje_invitacion: 'Hola {nombre}. Con Micelia, una cooperativa de trabajo de mujeres, estamos armando el Festival de Solsticio el sábado 19/12 en una casona con parque en Guaymallén. Va a ser un día de arte, música, juegos, magia, comiditas ricas y marcas con sentido, con yoga y cierre consciente de solsticio por la mañana, y el festival con cierre artístico por la tarde.\n\nNos encantaría que {proyecto} sea parte como sponsor. Acá te cuento qué recibe tu comunidad y cómo sumarte, con los niveles Semilla, Raíz y Copa: {link}\n\n¿Te parece que lo conversemos esta semana?',
 }
 
@@ -44,3 +48,9 @@ export function propuestaCompleta(v: unknown): PropuestaTxt {
 }
 
 export const lineas = (t: string) => t.split('\n').map((x) => x.trim()).filter(Boolean)
+
+/** Primer monto en pesos de los aportes de un nivel (ej. "$ 15.000"), o null si el nivel no tiene pago. */
+export function montoNivel(aportas: string): string | null {
+  const m = aportas.match(/\$\s?[\d.]+/)
+  return m ? m[0].replace(/^\$\s?/, '$ ') : null
+}
