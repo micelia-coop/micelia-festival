@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DatosComprador, irAMercadoPago, MetodoPago, type Metodo } from '../../components/Checkout'
-import { Alerta, Button, Card, Field, Input, Spinner, Textarea, Titulo } from '../../components/ui'
+import { Alerta, Button, Card, Spinner, Titulo } from '../../components/ui'
 import { useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
 import { rpc, supabase, urlPublica } from '../../lib/supabase'
@@ -21,7 +21,6 @@ export default function BolsaRitual() {
   const [sel, setSel] = useState('')
   const [cantBolsa, setCantBolsa] = useState(1)
   const [cantExtra, setCantExtra] = useState<Record<string, number>>({})
-  const [regalo, setRegalo] = useState(false)
   const [entrega, setEntrega] = useState<'retiro_petruca' | 'retiro_festival'>('retiro_petruca')
   const [metodo, setMetodo] = useState<Metodo>('transferencia')
   const conMP = config.ventas.mercadopago === true
@@ -61,7 +60,7 @@ export default function BolsaRitual() {
         p_nombre: f.get('nombre'), p_email: f.get('email'), p_whatsapp: f.get('whatsapp'), p_metodo: metodo,
         p_bolsa_id: bolsa!.id, p_cantidad: cantBolsa,
         p_extras: Object.entries(cantExtra).filter(([, n]) => n > 0).map(([producto_id, cantidad]) => ({ producto_id, cantidad })),
-        p_es_regalo: regalo, p_regalo_para: f.get('regalo_para'), p_regalo_mensaje: f.get('regalo_mensaje'), p_entrega: entrega,
+        p_es_regalo: false, p_regalo_para: null, p_regalo_mensaje: null, p_entrega: entrega,
         p_instagram: f.get('instagram'),
       })
       if (metodo === 'mercadopago') {
@@ -133,16 +132,6 @@ export default function BolsaRitual() {
 
         {abiertas && (
           <Card className="h-fit space-y-4 md:sticky md:top-24">
-            <label className="flex items-center gap-3 rounded-2xl bg-amor/10 p-3 font-bold">
-              <input type="checkbox" checked={regalo} onChange={(e) => setRegalo(e.target.checked)} className="size-5 accent-amor" />
-              🎁 Es para regalar
-            </label>
-            {regalo && (
-              <div className="space-y-3">
-                <Field label="¿Para quién es?"><Input name="regalo_para" /></Field>
-                <Field label="Mensaje para la tarjeta"><Textarea name="regalo_mensaje" maxLength={300} /></Field>
-              </div>
-            )}
             <fieldset className="space-y-2">
               <legend className="mb-1 text-sm font-bold">¿Dónde la retirás?</legend>
               {([['retiro_petruca', config.bolsa.direccion_petruca ?? 'Local de Petruca · calle Espejo, Ciudad de Mendoza'], ['retiro_festival', 'El día del festival (19/12)']] as const).map(([v, t]) => (
