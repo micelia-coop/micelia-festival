@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import Escaner from '../../components/Escaner'
 import { Button, Card } from '../../components/ui'
-import { hora } from '../../lib/format'
-import { rpc } from '../../lib/supabase'
+import { hora, pesos } from '../../lib/format'
+import { rpc, supabase } from '../../lib/supabase'
 
 type Res = {
   resultado: 'ok' | 'ya_ingreso' | 'no_valida' | 'temprano' | 'disponible' | 'marcado' | 'usado' | 'no_aplica'
@@ -21,6 +21,9 @@ export default function Puerta() {
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
   const [adentro, setAdentro] = useState<number | null>(null)
+
+  const [bolsas, setBolsas] = useState<{ id: string; nombre: string; precio_base: number }[]>([])
+  useEffect(() => { supabase.from('bolsas').select('id,nombre,precio_base').eq('activo', true).order('orden').then(({ data }) => setBolsas(data ?? [])) }, [])
 
   const contar = () => rpc<{ participantes: number }>('sorteo_estado').then((d) => setAdentro(d.participantes)).catch(() => {})
   useEffect(() => { contar() }, [])
@@ -61,6 +64,16 @@ export default function Puerta() {
           {res.resultado === 'ya_ingreso' && res.ingreso_at && <p className="text-lg">Ingresó a las {hora(res.ingreso_at)}</p>}
           {res.mensaje && <p className="text-lg">{res.mensaje}</p>}
           {res.resultado === 'temprano' && <Button variante="borde" className="!border-white !text-white" onClick={() => leer(ultimo, { forzar: true })}>Dejar pasar igual</Button>}
+          {(res.resultado === 'disponible' || res.resultado === 'marcado') && res.pct != null && bolsas.length > 0 && (
+            <div className="space-y-1 rounded-2xl bg-white/15 p-3 text-left">
+              {bolsas.map((b) => (
+                <p key={b.id} className="text-lg">
+                  {b.nombre}: <span className="line-through opacity-80">{pesos(b.precio_base)}</span> → <strong className="text-2xl">Cobrar {pesos(Math.round(b.precio_base * (1 - res.pct! / 100)))}</strong>
+                </p>
+              ))}
+              <p className="text-sm opacity-90">El descuento es para una bolsa. Cobrá con el QR de Mercado Pago, transferencia a miceliacoop.mp o efectivo.</p>
+            </div>
+          )}
           {res.resultado === 'disponible' && <Button grande variante="borde" className="!border-white !bg-white !text-bosque" onClick={() => leer(ultimo, { marcar: true })}>Marcar descuento como usado</Button>}
         </div>
       )}
