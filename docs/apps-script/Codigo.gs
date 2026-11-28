@@ -18,6 +18,10 @@
 const SITIO = 'https://festival-micelia.pages.dev';
 const FIRMA = 'Micelia Cooperativa';
 const CANAL_TELEGRAM = 'https://t.me/miceliacomunidad/85';
+// Base de datos (la clave publicable es pública; la seguridad la da el SECRETO)
+const SUPABASE_URL = 'https://yaarirnpxdvzmyzjtjws.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_d41nHH3n1IOn2iAQFWNAXQ_V4Kodm0Z';
+const ALERTA_INSCRIPTAS = 70;
 
 // ============================== TEXTOS ==============================
 
@@ -173,6 +177,20 @@ const TEXTOS = {
       <p>Si ya transferiste y creés que es un error, respondé este mail y lo revisamos.<br>${FIRMA}</p>`,
   }),
 
+  // Mail diario del Desafío (lo manda enviarDesafioDiario a las 6 am)
+  desafio_dia: (dia, nombrePersona) => ({
+    asunto: `🌿 Día ${dia.dia} del Desafío de Gratitud: ya está disponible`,
+    cuerpo: `
+      <p>¡Buen día, ${nombre(nombrePersona)}!</p>
+      <p>Ya podés ver el video del <b>Día ${dia.dia}</b>${dia.titulo && !/^d[ií]a \d+$/i.test(dia.titulo) ? `: <b>${esc(dia.titulo)}</b>` : ''}.</p>
+      ${dia.descripcion ? `<p>${esc(dia.descripcion)}</p>` : ''}
+      ${boton(SITIO + '/desafio', 'Ver el video de hoy')}
+      <p>Elegí un momento tranquilo del día para tu práctica 💜</p>
+      ${boton(CANAL_TELEGRAM, 'Canal de Respira y Transfórmate en Telegram')}
+      <p>Con gratitud,<br>${FIRMA}</p>
+      <p style="font-size:12px;color:#888">Si no querés recibir más estos mails, respondé con la palabra BAJA.</p>`,
+  }),
+
   prueba: () => ({
     aviso: '✅ Prueba de mails del Festival de Solsticio',
     avisoCuerpo: '<p>Si te llegó este mail, la conexión entre Supabase y el Gmail de Micelia funciona.</p>',
@@ -201,6 +219,66 @@ function doPost(e) {
 }
 
 function doGet() { return respuesta('Mails del Festival de Solsticio: funcionando 🌿'); }
+
+// ======================= MAIL DIARIO DEL DESAFÍO =======================
+
+/** Lo ejecuta el activador todos los días a las 6 am. */
+function enviarDesafioDiario() {
+  const secreto = PropertiesService.getScriptProperties().getProperty('SECRETO');
+  const datos = llamarSupabase('desafio_pendientes_hoy', { p_secreto: secreto, p_limite: 90 });
+  avisarSiHayMuchas(datos.total_inscriptas);
+  if (!datos.dia) { console.log('Hoy no hay día publicado con video.'); return; }
+  const cupo = Math.max(MailApp.getRemainingDailyQuota() - 10, 0);   // dejamos lugar para avisos y compras
+  const enviados = [];
+  for (const p of datos.pendientes.slice(0, cupo)) {
+    try {
+      const t = TEXTOS.desafio_dia(datos.dia, p.nombre);
+      enviar(p.email, t.asunto, t.cuerpo);
+      enviados.push(p.id);
+    } catch (err) { console.error('No se pudo enviar a ' + p.email, err); }
+  }
+  if (enviados.length) llamarSupabase('desafio_marcar_enviados', { p_secreto: secreto, p_dia: datos.dia.dia, p_ids: enviados });
+  const faltan = datos.pendientes.length - enviados.length;
+  console.log(`Día ${datos.dia.dia}: enviados ${enviados.length}, sin enviar ${faltan}`);
+  if (faltan > 0) enviar(casillaAvisos(), `[Festival] ⚠️ Mail del desafío: faltaron ${faltan} por el límite diario de Gmail`,
+    '<p>Hoy no alcanzó el cupo de Gmail para mandar el mail del desafío a todas. Hay que ver otra forma de envío.</p>');
+}
+
+/** Ejecutar UNA sola vez: programa el envío diario a las 6 am (hora de Mendoza). */
+function instalarEnvioDiario() {
+  ScriptApp.getProjectTriggers().filter((t) => t.getHandlerFunction() === 'enviarDesafioDiario').forEach((t) => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('enviarDesafioDiario').timeBased().everyDays(1).atHour(6).nearMinute(0)
+    .inTimezone('America/Argentina/Mendoza').create();
+  console.log('Listo: el mail del desafío sale todos los días entre las 6 y las 7 am.');
+}
+
+/** Para ver cómo queda: manda el mail del día de hoy SOLO a la casilla de avisos (no a las inscriptas). */
+function probarDesafioDiario() {
+  const secreto = PropertiesService.getScriptProperties().getProperty('SECRETO');
+  const datos = llamarSupabase('desafio_pendientes_hoy', { p_secreto: secreto, p_limite: 0 });
+  const dia = datos.dia || { dia: 1, titulo: 'Ejemplo', descripcion: 'Hoy no hay un día publicado con video: esto es un ejemplo.' };
+  const t = TEXTOS.desafio_dia(dia, 'Micelia');
+  enviar(casillaAvisos(), '[PRUEBA] ' + t.asunto, t.cuerpo);
+  console.log('Inscriptas: ' + datos.total_inscriptas + ' · Día de hoy: ' + (datos.dia ? datos.dia.dia : 'ninguno publicado'));
+}
+
+function avisarSiHayMuchas(total) {
+  const props = PropertiesService.getScriptProperties();
+  if (total >= ALERTA_INSCRIPTAS && !props.getProperty('ALERTA_ENVIADA')) {
+    enviar(casillaAvisos(), `[Festival] 📣 Ya hay ${total} inscriptas al desafío`,
+      `<p>Llegaron a ${total} inscriptas. El Gmail de Micelia manda unos 100 mails por día: conviene ver cómo seguimos con el mail diario.</p>`);
+    props.setProperty('ALERTA_ENVIADA', 'si');
+  }
+}
+
+function llamarSupabase(funcion, args) {
+  const r = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/' + funcion, {
+    method: 'post', contentType: 'application/json', payload: JSON.stringify(args), muteHttpExceptions: true,
+    headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+  });
+  if (r.getResponseCode() >= 300) throw new Error(funcion + ': ' + r.getResponseCode() + ' ' + r.getContentText());
+  return JSON.parse(r.getContentText());
+}
 
 /** Para probar desde el editor: Ejecutar → probar */
 function probar() {

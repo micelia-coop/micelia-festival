@@ -5,7 +5,7 @@ import { fechaHora } from '../../lib/format'
 import { supabase } from '../../lib/supabase'
 
 type Dia = { dia: number; fecha: string; titulo: string | null; descripcion: string | null; youtube_url: string | null; publicado: boolean }
-type Insc = { id: string; nombre: string; email: string; whatsapp: string | null; instagram: string | null; ciudad: string | null; como_se_entero: string | null; acepta_comunicaciones: boolean; created_at: string }
+type Insc = { id: string; nombre: string; email: string; whatsapp: string | null; instagram: string | null; baja?: boolean; ciudad: string | null; como_se_entero: string | null; acepta_comunicaciones: boolean; created_at: string }
 
 export default function PanelDesafio() {
   const [dias, setDias] = useState<Dia[] | null>(null)
@@ -14,7 +14,7 @@ export default function PanelDesafio() {
 
   useEffect(() => {
     supabase.from('desafio_dias').select('*').order('dia').then(({ data }) => setDias((data as Dia[]) ?? []))
-    supabase.from('desafio_inscripciones').select('id,nombre,email,whatsapp,instagram,ciudad,como_se_entero,acepta_comunicaciones,created_at')
+    supabase.from('desafio_inscripciones').select('*')
       .order('created_at', { ascending: false }).then(({ data }) => setInsc((data as Insc[]) ?? []))
   }, [])
 
@@ -43,15 +43,20 @@ export default function PanelDesafio() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Desafío de Gratitud</h1>
-      <Alerta>Cada día se ve en el sitio cuando está <strong>publicado</strong> y llegó su <strong>fecha</strong>. Podés cargar y publicar todo por adelantado.</Alerta>
+      <Alerta>Cada día se ve en el sitio cuando está <strong>publicado</strong> y llegó su <strong>fecha</strong>. Podés cargar y publicar todo por adelantado. Si el día tiene <strong>video</strong>, a las <strong>6 am</strong> de su fecha les llega un mail a las inscriptas.</Alerta>
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl font-bold">Inscriptas: {insc.length}</h2>
-          <Button variante="suave" disabled={!insc.length} onClick={() => descargarCsv('inscriptas-desafio.csv', insc.map(({ id: _id, ...r }) => r))}>Descargar CSV</Button>
+          <Button variante="suave" disabled={!insc.length} onClick={() => descargarCsv('inscriptas-desafio.csv', insc.map((x) => { const { id: _id, token: _t, ...r } = x as Insc & { token?: string }; return r }))}>Descargar CSV</Button>
         </div>
         <ul className="mt-3 max-h-72 divide-y divide-secundario/60 overflow-y-auto text-sm">
-          {insc.map((i) => <li key={i.id} className="py-2"><strong>{i.nombre}</strong> · {i.email} · {i.whatsapp ?? '—'}{i.instagram ? ` · @${i.instagram}` : ''} <span className="text-bosque/60">· {fechaHora(i.created_at)}</span></li>)}
+          {insc.map((i) => <li key={i.id} className={`flex flex-wrap items-center justify-between gap-2 py-2 ${i.baja ? 'opacity-50' : ''}`}><span><strong>{i.nombre}</strong> · {i.email} · {i.whatsapp ?? '—'}{i.instagram ? ` · @${i.instagram}` : ''} <span className="text-bosque/60">· {fechaHora(i.created_at)}</span>{i.baja && <strong> · dada de baja de los mails</strong>}</span>
+            <button className="text-xs font-bold underline" onClick={async () => {
+              const { error } = await supabase.from('desafio_inscripciones').update({ baja: !i.baja }).eq('id', i.id)
+              if (!error) setInsc((l) => l.map((x) => (x.id === i.id ? { ...x, baja: !i.baja } : x)))
+              else setMsg('Error: ' + error.message)
+            }}>{i.baja ? 'Volver a enviar mails' : 'Dar de baja de los mails'}</button></li>)}
         </ul>
       </Card>
 
