@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DatosComprador, irAMercadoPago, MetodoPago, type Metodo } from '../../components/Checkout'
-import { Alerta, Button, Card, Spinner, Titulo } from '../../components/ui'
+import { Alerta, Button, Card, Input, Spinner, Titulo } from '../../components/ui'
 import { pctDescuentoBolsa, useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
 import { rpc } from '../../lib/supabase'
@@ -20,11 +20,20 @@ export default function Entradas() {
   useEffect(() => { if (conMP) setMetodo('mercadopago') }, [conMP])
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
+  const [codigo, setCodigo] = useState('')
+  const [cod, setCod] = useState<{ ok: boolean; pct?: number; mensaje: string } | null>(null)
+  async function aplicarCodigo() {
+    if (!codigo.trim()) return
+    try { setCod(await rpc<{ ok: boolean; pct?: number; mensaje: string }>('verificar_codigo_marca', { p_codigo: codigo.trim() })) }
+    catch (e) { setCod({ ok: false, mensaje: (e as Error).message }) }
+  }
   const abiertas = config.ventas.entradas_abiertas === true
 
   useEffect(() => { rpc<TipoEntrada[]>('tipos_entrada_disponibles').then(setTipos).catch((e) => setError(e.message)) }, [])
 
-  const total = (tipos ?? []).reduce((s, t) => s + (cant[t.id] ?? 0) * t.precio, 0)
+  const subtotal = (tipos ?? []).reduce((s, t) => s + (cant[t.id] ?? 0) * t.precio, 0)
+  const descuento = cod?.ok && cod.pct ? Math.min(Math.round(subtotal * Number(cod.pct) / 100), subtotal) : 0
+  const total = subtotal - descuento
   const nTotal = Object.values(cant).reduce((a, b) => a + b, 0)
 
   const cambiar = (t: TipoEntrada, d: number) => setCant((c) => {
@@ -44,6 +53,7 @@ export default function Entradas() {
       const r = await rpc<{ token: string }>('crear_pedido_entradas', {
         p_nombre: f.get('nombre'), p_email: f.get('email'), p_whatsapp: f.get('whatsapp'), p_metodo: metodo,
         p_instagram: f.get('instagram'),
+        ...(cod?.ok ? { p_codigo_descuento: codigo.trim() } : {}),
         p_items: Object.entries(cant).filter(([, n]) => n > 0).map(([id, n]) => ({
           tipo_entrada_id: id, cantidad: n, mats: Array.from({ length: n }, (_, i) => mats[id]?.[i] ?? null),
         })),
@@ -119,7 +129,16 @@ export default function Entradas() {
             <Card className="h-fit space-y-4 md:sticky md:top-24">
               <h2 className="text-xl font-bold">Tus datos</h2>
               <DatosComprador />
+              <div className="space-y-2">
+                <p className="text-sm font-bold">¿Tenés un código de una marca aliada?</p>
+                <div className="flex gap-2">
+                  <Input placeholder="CÓDIGO" value={codigo} autoCapitalize="characters" onChange={(e) => { setCodigo(e.target.value.toUpperCase()); setCod(null) }} aria-label="Código de descuento" />
+                  <Button type="button" variante="suave" onClick={aplicarCodigo}>Aplicar</Button>
+                </div>
+                {cod && <p className={`text-sm font-bold ${cod.ok ? 'text-exito' : 'text-error'}`}>{cod.mensaje}</p>}
+              </div>
               <MetodoPago valor={metodo} onChange={setMetodo} conMP={conMP} />
+              {descuento > 0 && <p className="flex justify-between font-bold text-exito"><span>Descuento</span><span>− {pesos(descuento)}</span></p>}
               <div className="flex items-baseline justify-between border-t border-secundario pt-3">
                 <span className="font-bold">Total</span>
                 <span className="font-display text-3xl font-bold">{pesos(total)}</span>

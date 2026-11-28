@@ -54,6 +54,7 @@ export default function PanelMarcas() {
       <p className="text-sm text-bosque/70"><strong>Invitar:</strong> ponés solo el nombre y le mandás un link privado para que la marca complete sus datos, logo y productos. <strong>Cargarla yo:</strong> completás vos toda la ficha.</p>
       <InvitarSponsor />
       <FormulariosNivel />
+      <ReporteCodigos />
       <EditorPropuesta />
       <div className="flex gap-2">
         {ESTADOS.map((e) => (
@@ -145,6 +146,7 @@ function EditorMarca({ marca, onVolver }: { marca: Marca; onVolver: () => void }
         </div>
       </Card>
       <RegistroPrivado m={m} onCambio={(c) => setM((x) => ({ ...x, ...c }))} />
+      <CodigosMarca marcaId={m.id} nombre={m.nombre} />
       {msg && <Alerta tipo={msg.tipo}>{msg.t}</Alerta>}
       <Button grande onClick={guardar}>Guardar marca</Button>
 
@@ -443,5 +445,74 @@ function FormulariosNivel() {
         {copiado === 'error' && <p className="text-sm font-bold text-error">Tu navegador no dejó copiar: tocá el link, seleccionalo y copialo a mano.</p>}
       </div>
     </details>
+  )
+}
+
+type Codigo = { id: string; codigo: string; marca: string | null; pct: number; activo: boolean; pedidos_pagados: number; entradas: number; total_vendido: number; total_descontado: number }
+
+function ReporteCodigos() {
+  const [lista, setLista] = useState<Codigo[] | null>(null)
+  const cargar = () => rpc<Codigo[]>('reporte_codigos').then(setLista).catch(() => setLista([]))
+  return (
+    <details className="rounded-3xl bg-superficie p-4 ring-1 ring-secundario/60" onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) cargar() }}>
+      <summary className="cursor-pointer text-lg font-bold">📊 Ventas por código de descuento</summary>
+      <div className="mt-3 overflow-x-auto">
+        {!lista ? <Spinner /> : lista.length === 0 ? <p className="text-sm">Todavía no hay códigos. Se crean adentro de cada marca.</p> : (
+          <table className="w-full text-left text-sm">
+            <thead><tr className="border-b border-secundario"><th className="py-2 pr-2">Código</th><th className="pr-2">Marca</th><th className="pr-2">%</th><th className="pr-2">Entradas</th><th className="pr-2">Vendido</th><th>Descontado</th></tr></thead>
+            <tbody>
+              {lista.map((c) => (
+                <tr key={c.id} className={`border-b border-secundario/50 ${c.activo ? '' : 'opacity-50'}`}>
+                  <td className="py-2 pr-2 font-mono font-bold">{c.codigo}</td><td className="pr-2">{c.marca ?? '—'}</td><td className="pr-2">{Number(c.pct)}%</td>
+                  <td className="pr-2">{c.entradas}</td><td className="pr-2">{pesos(Number(c.total_vendido))}</td><td>{pesos(Number(c.total_descontado))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <p className="mt-2 text-xs text-bosque/70">Cuenta solo pedidos pagados.</p>
+      </div>
+    </details>
+  )
+}
+
+function CodigosMarca({ marcaId, nombre }: { marcaId: string; nombre: string }) {
+  const [codigos, setCodigos] = useState<{ id: string; codigo: string; pct: number; activo: boolean }[]>([])
+  const [nuevo, setNuevo] = useState(nombre.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]/g, '').slice(0, 14))
+  const [pct, setPct] = useState('0')
+  const [msg, setMsg] = useState('')
+  const cargar = () => supabase.from('codigos_descuento').select('id,codigo,pct,activo').eq('marca_id', marcaId).order('created_at').then(({ data }) => setCodigos((data as typeof codigos) ?? []))
+  useEffect(() => { cargar() }, [marcaId])
+
+  async function crear() {
+    const c = nuevo.trim().toUpperCase().replace(/\s+/g, '')
+    if (!/^[A-Z0-9_-]{3,20}$/.test(c)) { setMsg('El código tiene que tener entre 3 y 20 letras o números, sin espacios.'); return }
+    const { error } = await supabase.from('codigos_descuento').insert({ codigo: c, marca_id: marcaId, pct: Number(pct.replace(',', '.')) || 0 })
+    setMsg(error ? (/duplicate|unique/i.test(error.message) ? 'Ese código ya existe: elegí otro.' : error.message) : 'Código creado ✓')
+    if (!error) cargar()
+  }
+  const cambiar = async (id: string, c: Record<string, unknown>) => { await supabase.from('codigos_descuento').update(c).eq('id', id); cargar() }
+
+  return (
+    <Card className="space-y-3" acento="var(--color-lavanda)">
+      <h2 className="text-xl font-bold">Códigos de descuento para entradas</h2>
+      <p className="text-sm text-bosque/80">La marca lo comparte con su comunidad; quien compra entradas lo ingresa al pagar. Con 0% sirve igual para saber cuánto vendió cada marca.</p>
+      {codigos.map((c) => (
+        <div key={c.id} className={`flex flex-wrap items-center gap-2 rounded-2xl bg-fondo p-3 ${c.activo ? '' : 'opacity-60'}`}>
+          <span className="font-mono text-lg font-bold">{c.codigo}</span>
+          <label className="flex items-center gap-1 text-sm">%
+            <input type="number" min={0} max={100} defaultValue={Number(c.pct)} className="w-20 rounded-lg border-2 border-secundario px-2 py-1"
+              onBlur={(e) => Number(e.target.value) !== Number(c.pct) && cambiar(c.id, { pct: Number(e.target.value) || 0 })} aria-label={`Porcentaje de ${c.codigo}`} />
+          </label>
+          <Button variante={c.activo ? 'suave' : 'exito'} className="!py-1 text-sm" onClick={() => cambiar(c.id, { activo: !c.activo })}>{c.activo ? 'Desactivar' : 'Activar'}</Button>
+        </div>
+      ))}
+      <div className="flex flex-wrap items-end gap-2">
+        <Field label="Código nuevo"><Input value={nuevo} onChange={(e) => setNuevo(e.target.value.toUpperCase())} className="font-mono" /></Field>
+        <Field label="% descuento"><Input type="number" min={0} max={100} value={pct} onChange={(e) => setPct(e.target.value)} className="!w-24" /></Field>
+        <Button onClick={crear}>Crear código</Button>
+      </div>
+      {msg && <p className="text-sm font-bold">{msg}</p>}
+    </Card>
   )
 }

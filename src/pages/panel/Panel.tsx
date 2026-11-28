@@ -12,10 +12,14 @@ const Avisos = lazy(() => import('./PanelAvisos'))
 const Config = lazy(() => import('./PanelConfig'))
 const Equipo = lazy(() => import('./Equipo'))
 const MiCuenta = lazy(() => import('./MiCuenta'))
+const Puerta = lazy(() => import('./Puerta'))
+const Sorteo = lazy(() => import('./Sorteo'))
 
 const SECCIONES: { to: string; label: string; rol: Rol | null }[] = [
   { to: '', label: 'Inicio', rol: null },
   { to: 'pagos', label: 'Pagos', rol: 'admin' },
+  { to: 'puerta', label: 'Puerta', rol: 'puerta' },
+  { to: 'sorteo', label: 'Sorteo', rol: 'admin' },
   { to: 'marcas', label: 'Marcas aliadas', rol: 'alianzas' },
   { to: 'desafio', label: 'Desafío', rol: 'desafio' },
   { to: 'avisos', label: 'Avisos', rol: 'admin' },
@@ -76,6 +80,8 @@ function PanelInterno() {
             <Route path="config" element={ruta('admin', <Config />)} />
             <Route path="equipo" element={ruta('admin', <Equipo />)} />
             <Route path="cuenta" element={<MiCuenta />} />
+            <Route path="puerta" element={ruta('puerta', <Puerta />)} />
+            <Route path="sorteo" element={ruta('admin', <Sorteo />)} />
             <Route path="*" element={<Navigate to="/panel" replace />} />
           </Routes>
         </Suspense>
