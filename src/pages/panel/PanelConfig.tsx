@@ -20,8 +20,8 @@ const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
     { k: 'teaser_bajada', label: 'Próximamente · bajada' }, { k: 'teaser_fecha_label', label: 'Próximamente · texto sobre la fecha' },
     { k: 'teaser_fecha', label: 'Próximamente · fecha' },
     { k: 'cuenta_hasta', label: 'Cuenta regresiva hasta', tipo: 'fechahora', hint: 'Hora de Mendoza' },
-    { k: 'teaser_img_movil', label: 'Imagen del banner · celular', tipo: 'imagen', hint: 'Vertical, 1080 × 1800 px, JPG o WebP de menos de 500 KB' },
-    { k: 'teaser_img_desktop', label: 'Imagen del banner · computadora', tipo: 'imagen', hint: 'Horizontal, 1920 × 1080 px, JPG o WebP de menos de 500 KB' },
+    { k: 'teaser_img_movil', label: 'Imagen del banner del inicio · celular', tipo: 'imagen', hint: 'Vertical, 1080 × 1800 px, JPG o WebP de menos de 500 KB' },
+    { k: 'teaser_img_desktop', label: 'Imagen del banner del inicio · computadora', tipo: 'imagen', hint: 'Horizontal, 1920 × 1080 px, JPG o WebP de menos de 500 KB' },
     { k: 'teaser_velo', label: 'Velo verde sobre la imagen (para que se lean los textos)', tipo: 'bool' },
   ] },
   { clave: 'ventas', titulo: 'Ventas', campos: [

@@ -16,21 +16,31 @@ const RECORRIDO = [
 /** "2026-12-19T13:00" (hora de Mendoza) → ISO con zona. */
 const conZona = (v?: string) => (!v ? undefined : /[zZ]|[+-]\d\d:?\d\d$/.test(v) ? v : `${v.length === 16 ? v + ':00' : v}-03:00`)
 
-function Teaser() {
+/** Imagen de fondo del banner (celular / computadora) con velo opcional. */
+function FondoBanner() {
   const { config } = useConfig()
   const t = config.sitio
   const imgMovil = urlPublica('festival', t.teaser_img_movil || t.teaser_img_desktop)
   const imgDesk = urlPublica('festival', t.teaser_img_desktop || t.teaser_img_movil)
+  if (!imgMovil && !imgDesk) return null
+  return (
+    <>
+      <picture className="absolute inset-0" aria-hidden="true">
+        {imgDesk && <source media="(min-width: 768px)" srcSet={imgDesk} />}
+        <img src={imgMovil ?? imgDesk} alt="" className="h-full w-full object-cover" />
+      </picture>
+      {t.teaser_velo !== false && <div className="absolute inset-0 bg-bosque/55" aria-hidden="true" />}
+    </>
+  )
+}
+
+function Teaser() {
+  const { config } = useConfig()
+  const t = config.sitio
   return (
     <div className="space-y-8">
       <section className="relative -mx-4 -mt-6 flex min-h-[78dvh] flex-col justify-center overflow-hidden bg-bosque px-4 py-12 text-center text-crema sm:rounded-b-[2.5rem]">
-        {(imgMovil || imgDesk) && (
-          <picture className="absolute inset-0" aria-hidden="true">
-            {imgDesk && <source media="(min-width: 768px)" srcSet={imgDesk} />}
-            <img src={imgMovil ?? imgDesk} alt="" className="h-full w-full object-cover" />
-          </picture>
-        )}
-        {(imgMovil || imgDesk) && t.teaser_velo !== false && <div className="absolute inset-0 bg-bosque/55" aria-hidden="true" />}
+        <FondoBanner />
         <div className="relative mx-auto w-full max-w-3xl space-y-6">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-tierra sm:text-base">{t.teaser_kicker}</p>
           <h1 className="text-[9.5vw] font-bold uppercase leading-none sm:text-8xl">{t.teaser_titulo}</h1>
@@ -72,8 +82,9 @@ export default function Inicio() {
   if (config.sitio.teaser) return <Teaser />
   return (
     <div className="space-y-8">
-      <section className="-mx-4 -mt-6 bg-bosque px-4 pb-10 pt-8 text-crema sm:rounded-b-[2.5rem]">
-        <div className="mx-auto max-w-5xl space-y-5">
+      <section className="relative -mx-4 -mt-6 overflow-hidden bg-bosque px-4 pb-10 pt-8 text-crema sm:rounded-b-[2.5rem]">
+        <FondoBanner />
+        <div className="relative mx-auto max-w-5xl space-y-5">
           <p className="font-bold uppercase tracking-widest text-tierra">{f.organiza ?? 'Micelia Cooperativa'} presenta</p>
           <h1 className="text-5xl font-bold leading-none sm:text-6xl">{f.nombre}</h1>
           <p className="max-w-xl text-lg text-crema/90">{f.bajada}</p>
