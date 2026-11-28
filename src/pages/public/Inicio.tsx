@@ -5,13 +5,8 @@ import CuentaRegresiva from '../../components/CuentaRegresiva'
 import { useConfig } from '../../lib/config'
 import { diaLocal, fechaLarga } from '../../lib/format'
 import { urlPublica } from '../../lib/supabase'
+import { recorrido } from '../../lib/recorrido'
 
-const RECORRIDO = [
-  { to: '/desafio', color: 'var(--color-lavanda)', etiqueta: 'Desde el 28/11 · online y gratis', titulo: 'Desafío de Gratitud', texto: '21 días, un video por día. Sumate y empezá a preparar el ritual.' },
-  { to: '/entradas', color: 'var(--color-tierra)', etiqueta: '19/12 · 8 a 12 hs · cupo 20', titulo: 'Mañana de yoga + almuerzo', texto: 'Práctica con Respira y Transfórmate y almuerzo de La Tregua. Incluye la tarde.' },
-  { to: '/entradas', color: 'var(--color-arcilla)', etiqueta: '19/12 · desde las 13 hs', titulo: 'Festival de la tarde', texto: 'Marcas emprendedoras, actividades y comida.' },
-  { to: '/bolsa-ritual', color: 'var(--color-amor)', etiqueta: 'Antes, durante y después', titulo: 'Bolsa Ritual + Guía de regalos', texto: 'Regalos conscientes de marcas emprendedoras para estas fiestas.' },
-]
 
 /** "2026-12-19T13:00" (hora de Mendoza) → ISO con zona. */
 const conZona = (v?: string) => (!v ? undefined : /[zZ]|[+-]\d\d:?\d\d$/.test(v) ? v : `${v.length === 16 ? v + ':00' : v}-03:00`)
@@ -105,15 +100,21 @@ export default function Inicio() {
       {config.sitio.mostrar_recorrido && <section className="space-y-4">
         <h2 className="text-2xl font-bold">El recorrido</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          {RECORRIDO.map((r) => (
-            <Link key={r.titulo} to={r.to} className="group rounded-3xl bg-superficie p-5 shadow-sm ring-1 ring-secundario/60 transition hover:-translate-y-0.5"
-              style={{ borderLeft: `8px solid ${r.color}` }}>
-              <p className="text-sm font-bold text-bosque/70">{r.etiqueta}</p>
-              <h3 className="mt-1 text-xl font-bold">{r.titulo}</h3>
-              <p className="mt-1 text-bosque/80">{r.texto}</p>
-              <p className="mt-3 font-bold underline decoration-2 underline-offset-4">Ver más →</p>
-            </Link>
-          ))}
+          {recorrido(config.recorrido).filter((r) => r.visible !== false).map((r, i) => {
+            const contenido = (
+              <>
+                {r.etiqueta && <p className="text-sm font-bold text-bosque/70">{r.etiqueta}</p>}
+                <h3 className="mt-1 text-xl font-bold">{r.titulo}</h3>
+                {r.texto && <p className="mt-1 whitespace-pre-line text-bosque/80">{r.texto}</p>}
+                {r.link && <p className="mt-3 font-bold underline decoration-2 underline-offset-4">Ver más →</p>}
+              </>
+            )
+            const cls = 'block rounded-3xl bg-superficie p-5 shadow-sm ring-1 ring-secundario/60 transition hover:-translate-y-0.5'
+            const estilo = { borderLeft: `8px solid var(--color-${r.color || 'arcilla'})` }
+            return r.link
+              ? <Link key={i} to={r.link} className={cls} style={estilo}>{contenido}</Link>
+              : <div key={i} className={cls} style={estilo}>{contenido}</div>
+          })}
         </div>
       </section>}
 

@@ -21,6 +21,7 @@ export type Config = {
   bolsa: { direccion_petruca?: string; titulo?: string; bajada?: string; descuento_entrada_pct?: string | number | null }; canje: { fecha?: string; desde?: string; hasta?: string }
   sitio: Sitio
   propuesta?: unknown
+  recorrido?: unknown
 }
 
 export type TipoEntrada = {

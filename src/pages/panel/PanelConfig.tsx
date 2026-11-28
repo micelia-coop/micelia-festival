@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent } from 'react'
 import { Alerta, Button, Card, Field, Input, Textarea } from '../../components/ui'
 import { useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
+import { COLORES, LINKS, recorrido, type Tarjeta } from '../../lib/recorrido'
 import { supabase, urlPublica } from '../../lib/supabase'
 
 type Campo = { k: string; label: string; tipo?: 'texto' | 'largo' | 'bool' | 'fecha' | 'fechahora' | 'imagen'; hint?: string }
@@ -67,6 +68,7 @@ export default function PanelConfig() {
       {SECCIONES.map((s) => <SeccionCfg key={s.clave} {...s} valor={(config as unknown as Record<string, Record<string, unknown>>)[s.clave] ?? {}} onGuardado={recargar} />)}
       <TiposEntrada />
       <Bolsas />
+      <RecorridoEditor valor={config.recorrido} onGuardado={recargar} />
       <FaqEditor faq={config.faq ?? []} onGuardado={recargar} />
     </div>
   )
@@ -275,5 +277,49 @@ function CampoImagen({ label, hint, valor, onChange }: { label: string; hint?: s
       {error && <p className="text-sm font-bold text-error">{error}</p>}
       {valor && <p className="text-xs text-bosque/70">Tocá <strong>Guardar</strong> abajo para que se vea en la web.</p>}
     </div>
+  )
+}
+
+function RecorridoEditor({ valor, onGuardado }: { valor: unknown; onGuardado: () => void }) {
+  const [lista, setLista] = useState<Tarjeta[]>(() => recorrido(valor))
+  const [msg, setMsg] = useState('')
+  useEffect(() => setLista(recorrido(valor)), [valor])
+  const set = (i: number, k: keyof Tarjeta, v: unknown) => setLista((l) => l.map((x, j) => (j === i ? { ...x, [k]: v } : x)))
+  const mover = (i: number, d: number) => setLista((l) => { const n = [...l]; const j = i + d; if (j < 0 || j >= n.length) return l; [n[i], n[j]] = [n[j], n[i]]; return n })
+  async function guardar() {
+    const { error } = await supabase.from('config').upsert({ clave: 'recorrido', valor: lista.filter((t) => t.titulo.trim()), publico: true })
+    setMsg(error ? 'Error: ' + error.message : 'Guardado ✓'); if (!error) onGuardado(); setTimeout(() => setMsg(''), 2500)
+  }
+  return (
+    <Card className="space-y-3">
+      <h2 className="text-xl font-bold">"El recorrido" (tarjetas del inicio)</h2>
+      <p className="text-sm text-bosque/70">Se ven en el inicio completo (sin modo Próximamente) si está tildado "Mostrar El recorrido" en Sitio público.</p>
+      {lista.map((t, i) => (
+        <div key={i} className="space-y-2 rounded-2xl bg-fondo p-3" style={{ borderLeft: `8px solid var(--color-${t.color || 'arcilla'})` }}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-bold">Tarjeta {i + 1}</p>
+            <div className="flex gap-2 text-sm font-bold">
+              <button type="button" className="underline" onClick={() => mover(i, -1)} aria-label="Subir">↑</button>
+              <button type="button" className="underline" onClick={() => mover(i, 1)} aria-label="Bajar">↓</button>
+              <label className="flex items-center gap-1"><input type="checkbox" className="size-4 accent-bosque" checked={t.visible !== false} onChange={(e) => set(i, 'visible', e.target.checked)} /> Visible</label>
+              <button type="button" className="text-error underline" onClick={() => setLista(lista.filter((_, j) => j !== i))}>Quitar</button>
+            </div>
+          </div>
+          <Field label="Línea chica (fecha, horario…)"><Input value={t.etiqueta} onChange={(e) => set(i, 'etiqueta', e.target.value)} /></Field>
+          <Field label="Título"><Input value={t.titulo} onChange={(e) => set(i, 'titulo', e.target.value)} /></Field>
+          <Field label="Texto"><Textarea rows={2} value={t.texto} onChange={(e) => set(i, 'texto', e.target.value)} /></Field>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Lleva a"><select className="w-full rounded-xl border-2 border-secundario bg-white px-3 py-2" value={t.link} onChange={(e) => set(i, 'link', e.target.value)}>
+              {LINKS.map((l) => <option key={l.valor} value={l.valor}>{l.nombre}</option>)}</select></Field>
+            <Field label="Color"><select className="w-full rounded-xl border-2 border-secundario bg-white px-3 py-2" value={t.color} onChange={(e) => set(i, 'color', e.target.value)}>
+              {COLORES.map((c) => <option key={c.valor} value={c.valor}>{c.nombre}</option>)}</select></Field>
+          </div>
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variante="suave" onClick={() => setLista([...lista, { etiqueta: '', titulo: '', texto: '', link: '', color: 'arcilla' }])}>+ Tarjeta</Button>
+        <Button onClick={guardar}>Guardar recorrido</Button><span className="font-bold">{msg}</span>
+      </div>
+    </Card>
   )
 }
