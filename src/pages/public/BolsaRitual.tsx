@@ -6,6 +6,8 @@ import { useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
 import { rpc, supabase, urlPublica } from '../../lib/supabase'
 
+const BAJADA_BOLSA = 'Esta delicada bolsita brujil la hemos armado con mucho cuidado y amor. Pensada para que sea un sentido presente, que te autoregales o entregues a alguien más.'
+
 type Bolsa = { id: string; nombre: string; descripcion: string | null; precio_base: number; foto_path: string | null }
 type Base = { bolsa_id: string; cantidad: number; productos: { nombre: string; descripcion: string | null; marcas: { nombre: string } | null } | null }
 type Extra = { id: string; nombre: string; descripcion: string | null; precio: number; foto_path: string | null; marcas: { nombre: string } | null }
@@ -81,8 +83,7 @@ export default function BolsaRitual() {
 
   return (
     <div className="space-y-6">
-      <Titulo acento="var(--color-amor)" bajada="Un regalo consciente, armado con marcas emprendedoras de Mendoza.">Bolsa Ritual</Titulo>
-      {!abiertas && <Alerta tipo="alerta">{config.ventas.mensaje_cerrado ?? 'La venta abre muy pronto.'}</Alerta>}
+      <Titulo acento="var(--color-amor)" bajada={config.bolsa.bajada ?? BAJADA_BOLSA}>{config.bolsa.titulo ?? 'Bolsa Ritual'}</Titulo>
 
       {bolsas.length > 1 && (
         <div className="flex flex-wrap gap-2">

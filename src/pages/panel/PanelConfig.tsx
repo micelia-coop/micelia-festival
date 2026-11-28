@@ -45,7 +45,11 @@ const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
     { k: 'canal_texto', label: 'Botón después de inscribirse · texto', hint: 'Ej: Sumate al Canal de Respira y Transfórmate' },
     { k: 'canal_url', label: 'Botón después de inscribirse · link', hint: 'Ej: https://t.me/miceliacomunidad/85' },
   ] },
-  { clave: 'bolsa', titulo: 'Retiro de bolsas', campos: [{ k: 'direccion_petruca', label: 'Texto del punto de retiro en Petruca' }] },
+  { clave: 'bolsa', titulo: 'Página de la Bolsa', campos: [
+    { k: 'titulo', label: 'Título de la página', hint: 'Vacío = Bolsa Ritual' },
+    { k: 'bajada', label: 'Texto debajo del título', tipo: 'largo' },
+    { k: 'direccion_petruca', label: 'Texto del punto de retiro en Petruca' },
+  ] },
   { clave: 'canje', titulo: 'Franja de canje (día del festival)', campos: [
     { k: 'fecha', label: 'Fecha', tipo: 'fecha' }, { k: 'desde', label: 'Desde (HH:MM)' }, { k: 'hasta', label: 'Hasta (HH:MM)' },
   ] },
