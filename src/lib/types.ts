@@ -13,6 +13,7 @@ export type Sitio = {
   mostrar_postulacion: boolean; mostrar_info: boolean; mostrar_recorrido: boolean; mostrar_propuesta: boolean
   teaser_kicker?: string; teaser_titulo?: string; teaser_bajada?: string
   teaser_fecha_label?: string; teaser_fecha?: string; cuenta_hasta?: string
+  teaser_img_movil?: string | null; teaser_img_desktop?: string | null; teaser_velo?: boolean
 }
 
 export type Config = {

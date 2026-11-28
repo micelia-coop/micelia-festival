@@ -11,7 +11,7 @@ const DEFAULT: Config = {
     mostrar_postulacion: false, mostrar_info: false, mostrar_recorrido: false, mostrar_propuesta: true,
     teaser_kicker: 'Micelia Cooperativa presenta', teaser_titulo: 'Próximamente',
     teaser_bajada: 'Un día para celebrar en comunidad', teaser_fecha_label: 'Guardá esta fecha',
-    teaser_fecha: '19 de diciembre', cuenta_hasta: '2026-12-19T13:00',
+    teaser_fecha: '19 de diciembre', cuenta_hasta: '2026-12-19T13:00', teaser_velo: true,
   },
 }
 

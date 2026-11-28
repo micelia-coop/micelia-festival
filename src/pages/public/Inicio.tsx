@@ -4,6 +4,7 @@ import { BotonRed, IconoInstagram, IconoTelegram, urlInstagram } from '../../com
 import CuentaRegresiva from '../../components/CuentaRegresiva'
 import { useConfig } from '../../lib/config'
 import { diaLocal, fechaLarga } from '../../lib/format'
+import { urlPublica } from '../../lib/supabase'
 
 const RECORRIDO = [
   { to: '/desafio', color: 'var(--color-lavanda)', etiqueta: 'Desde el 28/11 · online y gratis', titulo: 'Desafío de Gratitud', texto: '21 días, un video por día. Sumate y empezá a preparar el ritual.' },
@@ -18,10 +19,19 @@ const conZona = (v?: string) => (!v ? undefined : /[zZ]|[+-]\d\d:?\d\d$/.test(v)
 function Teaser() {
   const { config } = useConfig()
   const t = config.sitio
+  const imgMovil = urlPublica('festival', t.teaser_img_movil || t.teaser_img_desktop)
+  const imgDesk = urlPublica('festival', t.teaser_img_desktop || t.teaser_img_movil)
   return (
     <div className="space-y-8">
-      <section className="-mx-4 -mt-6 flex min-h-[78dvh] flex-col justify-center overflow-hidden bg-bosque px-4 py-12 text-center text-crema sm:rounded-b-[2.5rem]">
-        <div className="mx-auto w-full max-w-3xl space-y-6">
+      <section className="relative -mx-4 -mt-6 flex min-h-[78dvh] flex-col justify-center overflow-hidden bg-bosque px-4 py-12 text-center text-crema sm:rounded-b-[2.5rem]">
+        {(imgMovil || imgDesk) && (
+          <picture className="absolute inset-0" aria-hidden="true">
+            {imgDesk && <source media="(min-width: 768px)" srcSet={imgDesk} />}
+            <img src={imgMovil ?? imgDesk} alt="" className="h-full w-full object-cover" />
+          </picture>
+        )}
+        {(imgMovil || imgDesk) && t.teaser_velo !== false && <div className="absolute inset-0 bg-bosque/55" aria-hidden="true" />}
+        <div className="relative mx-auto w-full max-w-3xl space-y-6">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-tierra sm:text-base">{t.teaser_kicker}</p>
           <h1 className="text-[9.5vw] font-bold uppercase leading-none sm:text-8xl">{t.teaser_titulo}</h1>
           <p className="font-display text-xl text-crema/90 sm:text-3xl">{t.teaser_bajada}</p>

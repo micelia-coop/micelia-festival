@@ -4,7 +4,7 @@ import { useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
 import { supabase, urlPublica } from '../../lib/supabase'
 
-type Campo = { k: string; label: string; tipo?: 'texto' | 'largo' | 'bool' | 'fecha' | 'fechahora'; hint?: string }
+type Campo = { k: string; label: string; tipo?: 'texto' | 'largo' | 'bool' | 'fecha' | 'fechahora' | 'imagen'; hint?: string }
 
 const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
   { clave: 'sitio', titulo: 'Sitio público: qué se ve', campos: [
@@ -20,6 +20,9 @@ const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
     { k: 'teaser_bajada', label: 'Próximamente · bajada' }, { k: 'teaser_fecha_label', label: 'Próximamente · texto sobre la fecha' },
     { k: 'teaser_fecha', label: 'Próximamente · fecha' },
     { k: 'cuenta_hasta', label: 'Cuenta regresiva hasta', tipo: 'fechahora', hint: 'Hora de Mendoza' },
+    { k: 'teaser_img_movil', label: 'Imagen del banner · celular', tipo: 'imagen', hint: 'Vertical, 1080 × 1800 px, JPG o WebP de menos de 500 KB' },
+    { k: 'teaser_img_desktop', label: 'Imagen del banner · computadora', tipo: 'imagen', hint: 'Horizontal, 1920 × 1080 px, JPG o WebP de menos de 500 KB' },
+    { k: 'teaser_velo', label: 'Velo verde sobre la imagen (para que se lean los textos)', tipo: 'bool' },
   ] },
   { clave: 'ventas', titulo: 'Ventas', campos: [
     { k: 'entradas_abiertas', label: 'Venta de entradas abierta', tipo: 'bool' },
@@ -81,7 +84,11 @@ function SeccionCfg({ clave, titulo, campos, valor, onGuardado }: { clave: strin
     <Card className="space-y-3">
       <h2 className="text-xl font-bold">{titulo}</h2>
       <div className="grid gap-3 md:grid-cols-2">
-        {campos.map((c) => c.tipo === 'bool' ? (
+        {campos.map((c) => c.tipo === 'imagen' ? (
+          <div key={c.k} className="md:col-span-2">
+            <CampoImagen label={c.label} hint={c.hint} valor={(v[c.k] as string) || null} onChange={(path) => setV({ ...v, [c.k]: path })} />
+          </div>
+        ) : c.tipo === 'bool' ? (
           <label key={c.k} className="flex items-center gap-2 font-bold md:col-span-2">
             <input type="checkbox" className="size-6 accent-bosque" checked={v[c.k] === true} onChange={(e) => setV({ ...v, [c.k]: e.target.checked })} /> {c.label}
           </label>
@@ -235,5 +242,37 @@ function FaqEditor({ faq, onGuardado }: { faq: { p: string; r: string }[]; onGua
         <Button onClick={guardar}>Guardar FAQ</Button><span className="font-bold">{msg}</span>
       </div>
     </Card>
+  )
+}
+
+function CampoImagen({ label, hint, valor, onChange }: { label: string; hint?: string; valor: string | null; onChange: (p: string | null) => void }) {
+  const [subiendo, setSubiendo] = useState(false)
+  const [error, setError] = useState('')
+  async function subir(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; if (!f) return
+    if (f.size > 3 * 1024 * 1024) { setError('La imagen pesa más de 3 MB: exportala más liviana.'); return }
+    setSubiendo(true); setError('')
+    const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `inicio/${Date.now()}.${ext}`
+    const { error: err } = await supabase.storage.from('festival').upload(path, f, { contentType: f.type || undefined })
+    setSubiendo(false)
+    if (err) { setError('No se pudo subir: ' + err.message); return }
+    onChange(path)
+  }
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-bold">{label}</p>
+      {hint && <p className="text-xs text-bosque/70">{hint}</p>}
+      <div className="flex flex-wrap items-center gap-3">
+        {valor && <img src={urlPublica('festival', valor)} alt="" className="h-24 rounded-xl object-cover ring-1 ring-secundario" />}
+        <label className="cursor-pointer rounded-2xl bg-secundario/60 px-4 py-2 font-bold">
+          {subiendo ? 'Subiendo…' : valor ? 'Cambiar imagen' : 'Subir imagen'}
+          <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={subir} />
+        </label>
+        {valor && <button type="button" className="text-sm font-bold text-error underline" onClick={() => onChange(null)}>Quitar</button>}
+      </div>
+      {error && <p className="text-sm font-bold text-error">{error}</p>}
+      {valor && <p className="text-xs text-bosque/70">Tocá <strong>Guardar</strong> abajo para que se vea en la web.</p>}
+    </div>
   )
 }
