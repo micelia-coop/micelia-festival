@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
     const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
     const { data: p } = await db.from('pedidos')
-      .select('id, codigo, token, nombre, email, total, estado, metodo_pago, vence_at, pedido_items(nombre, cantidad, precio_unit)')
+      .select('id, codigo, token, nombre, email, total, descuento, estado, metodo_pago, vence_at, pedido_items(nombre, cantidad, precio_unit)')
       .eq('token', token).maybeSingle()
     if (!p) return json({ error: 'No encontramos el pedido.' }, 404)
     if (p.metodo_pago !== 'mercadopago') return json({ error: 'Este pedido no es de Mercado Pago.' }, 400)
@@ -32,9 +32,12 @@ Deno.serve(async (req) => {
     }
 
     const pref = {
-      items: (p.pedido_items ?? []).map((i: { nombre: string; cantidad: number; precio_unit: number }) => ({
-        title: i.nombre, quantity: i.cantidad, unit_price: Number(i.precio_unit), currency_id: 'ARS',
-      })),
+      // Con descuento, un solo ítem por el total (Mercado Pago no acepta ítems negativos).
+      items: (p.descuento ?? 0) > 0
+        ? [{ title: `Pedido ${p.codigo} · Festival de Solsticio`, quantity: 1, unit_price: Number(p.total), currency_id: 'ARS' }]
+        : (p.pedido_items ?? []).map((i: { nombre: string; cantidad: number; precio_unit: number }) => ({
+            title: i.nombre, quantity: i.cantidad, unit_price: Number(i.precio_unit), currency_id: 'ARS',
+          })),
       payer: { name: p.nombre, email: p.email ?? undefined },
       external_reference: p.id,
       metadata: { pedido_token: p.token, codigo: p.codigo },

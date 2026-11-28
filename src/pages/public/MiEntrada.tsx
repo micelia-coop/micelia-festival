@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import QrCode from '../../components/QrCode'
 import { Alerta, Spinner } from '../../components/ui'
-import { useConfig } from '../../lib/config'
+import { pctDescuentoBolsa, useConfig } from '../../lib/config'
 import { diaLocal, fechaLarga, hora } from '../../lib/format'
 import { rpc } from '../../lib/supabase'
 import type { EntradaPublica } from '../../lib/types'
@@ -26,6 +26,8 @@ export default function MiEntrada() {
   if (e.ingreso_at) estados.push(`Ingresó ${hora(e.ingreso_at)}`)
   if (e.tipo.incluye_almuerzo) estados.push(e.almuerzo_at ? `Almuerzo retirado ${hora(e.almuerzo_at)}` : 'Almuerzo disponible')
   if (e.tipo.pregunta_mat && e.trae_mat != null) estados.push(e.trae_mat ? '🧘 Trae su mat' : '🧘 Le prestamos mat')
+  const pct = pctDescuentoBolsa(config)
+  if (e.tipo.descuento_bolsa && pct) estados.push(e.descuento_bolsa_usado ? '🎁 Descuento en bolsa usado' : `🎁 ${pct}% off en la Bolsa Ritual`)
   if (e.canje) estados.push(`Canjeada en ${e.canje.puesto} · ${hora(e.canje.at)}`)
 
   return (
@@ -51,6 +53,7 @@ export default function MiEntrada() {
         <ul className="list-disc space-y-1 pl-5 text-sm">
           <li>Mostrá este QR en la puerta para registrar tu ingreso.</li>
           {e.tipo.incluye_almuerzo && <li>En La Tregua, mostralo para retirar tu almuerzo (bebida + tapeo).</li>}
+          {e.tipo.descuento_bolsa && pct && !e.descuento_bolsa_usado && <li>Tenés <strong>{pct}% de descuento en la Bolsa Ritual</strong>: online, ingresando el código <strong>{e.codigo_corto}</strong> al comprarla, o en el festival mostrando este QR. Se usa una sola vez.</li>}
           <li>Subí el brillo de la pantalla para que se lea mejor. 🌞</li>
         </ul>
       </div>

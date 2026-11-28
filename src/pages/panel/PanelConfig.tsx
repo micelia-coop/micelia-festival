@@ -52,6 +52,7 @@ const SECCIONES: { clave: string; titulo: string; campos: Campo[] }[] = [
     { k: 'titulo', label: 'Título de la página', hint: 'Vacío = Bolsa Ritual' },
     { k: 'bajada', label: 'Texto debajo del título', tipo: 'largo' },
     { k: 'direccion_petruca', label: 'Texto del punto de retiro en Petruca' },
+    { k: 'descuento_entrada_pct', label: '% de descuento en la bolsa con la entrada de la tarde', hint: 'Solo el número, ej: 15. Vacío = sin descuento' },
   ] },
   { clave: 'canje', titulo: 'Franja de canje (día del festival)', campos: [
     { k: 'fecha', label: 'Fecha', tipo: 'fecha' }, { k: 'desde', label: 'Desde (HH:MM)' }, { k: 'hasta', label: 'Hasta (HH:MM)' },
@@ -107,7 +108,7 @@ function SeccionCfg({ clave, titulo, campos, valor, onGuardado }: { clave: strin
   )
 }
 
-type Tipo = { id: string; nombre: string; descripcion: string | null; precio: number; cupo: number | null; valor_canje: number; incluye_almuerzo: boolean; incluye_festival: boolean; pregunta_mat: boolean; venta_online: boolean; activo: boolean; orden: number }
+type Tipo = { id: string; nombre: string; descripcion: string | null; precio: number; cupo: number | null; valor_canje: number; incluye_almuerzo: boolean; incluye_festival: boolean; pregunta_mat: boolean; descuento_bolsa: boolean; venta_online: boolean; activo: boolean; orden: number }
 
 function TiposEntrada() {
   const [tipos, setTipos] = useState<Tipo[]>([])
@@ -134,9 +135,9 @@ function TiposEntrada() {
             <Field label="Valor de canje" hint="0 = no canjeable"><Input type="number" value={t.valor_canje} onChange={(e) => set(t.id, 'valor_canje', Number(e.target.value))} /></Field>
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-semibold">
-            {(['incluye_almuerzo', 'incluye_festival', 'pregunta_mat', 'venta_online', 'activo'] as const).map((k) => (
+            {(['incluye_almuerzo', 'incluye_festival', 'pregunta_mat', 'descuento_bolsa', 'venta_online', 'activo'] as const).map((k) => (
               <label key={k} className="flex items-center gap-2"><input type="checkbox" className="size-5 accent-bosque" checked={t[k]} onChange={(e) => set(t.id, k, e.target.checked)} />
-                {{ incluye_almuerzo: 'Incluye almuerzo', incluye_festival: 'Incluye festival', pregunta_mat: 'Pregunta si trae mat', venta_online: 'Se vende online', activo: 'Activo' }[k]}</label>
+                {{ incluye_almuerzo: 'Incluye almuerzo', incluye_festival: 'Incluye festival', pregunta_mat: 'Pregunta si trae mat', descuento_bolsa: 'Da descuento en la Bolsa', venta_online: 'Se vende online', activo: 'Activo' }[k]}</label>
             ))}
           </div>
           <Button onClick={() => guardar(t)}>Guardar</Button>

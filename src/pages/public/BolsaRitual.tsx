@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DatosComprador, irAMercadoPago, MetodoPago, type Metodo } from '../../components/Checkout'
-import { Alerta, Button, Card, Spinner, Titulo } from '../../components/ui'
-import { useConfig } from '../../lib/config'
+import { Alerta, Button, Card, Input, Spinner, Titulo } from '../../components/ui'
+import { pctDescuentoBolsa, useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
 import { rpc, supabase, urlPublica } from '../../lib/supabase'
 
@@ -27,6 +27,9 @@ export default function BolsaRitual() {
   useEffect(() => { if (conMP) setMetodo('mercadopago') }, [conMP])
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
+  const [codigo, setCodigo] = useState('')
+  const [desc, setDesc] = useState<{ ok: boolean; pct?: number; mensaje: string } | null>(null)
+  const pctConfig = pctDescuentoBolsa(config)
   const abiertas = config.ventas.bolsas_abiertas === true
 
   useEffect(() => {
@@ -48,7 +51,13 @@ export default function BolsaRitual() {
   if (!bolsa) return <Alerta>La Bolsa Ritual llega muy pronto.</Alerta>
 
   const totalExtras = extras.reduce((s, e) => s + (cantExtra[e.id] ?? 0) * e.precio, 0)
-  const total = cantBolsa * bolsa.precio_base + totalExtras
+  const descuento = desc?.ok && desc.pct ? Math.min(Math.round(bolsa.precio_base * desc.pct / 100), cantBolsa * bolsa.precio_base + totalExtras) : 0
+  const total = cantBolsa * bolsa.precio_base + totalExtras - descuento
+  async function aplicarCodigo() {
+    if (!codigo.trim()) return
+    try { setDesc(await rpc<{ ok: boolean; pct?: number; mensaje: string }>('verificar_codigo_descuento', { p_codigo: codigo.trim() })) }
+    catch (e) { setDesc({ ok: false, mensaje: (e as Error).message }) }
+  }
   const setExtra = (id: string, d: number) => setCantExtra((c) => ({ ...c, [id]: Math.max(0, Math.min(20, (c[id] ?? 0) + d)) }))
 
   async function comprar(e: FormEvent<HTMLFormElement>) {
@@ -62,6 +71,7 @@ export default function BolsaRitual() {
         p_extras: Object.entries(cantExtra).filter(([, n]) => n > 0).map(([producto_id, cantidad]) => ({ producto_id, cantidad })),
         p_es_regalo: false, p_regalo_para: null, p_regalo_mensaje: null, p_entrega: entrega,
         p_instagram: f.get('instagram'),
+        ...(desc?.ok ? { p_codigo_entrada: codigo.trim() } : {}),
       })
       if (metodo === 'mercadopago') {
         const err = await irAMercadoPago(r.token)
@@ -141,11 +151,24 @@ export default function BolsaRitual() {
                 </label>
               ))}
             </fieldset>
+            {pctConfig && (
+              <div className="space-y-2 rounded-2xl bg-amor/10 p-3">
+                <p className="text-sm font-bold">🎁 ¿Tenés entrada de la tarde? Tenés {pctConfig}% de descuento</p>
+                <div className="flex gap-2">
+                  <Input placeholder="MIC-XXXX" value={codigo} autoCapitalize="characters"
+                    onChange={(e) => { setCodigo(e.target.value.toUpperCase()); setDesc(null) }} aria-label="Código de tu entrada" />
+                  <Button type="button" variante="suave" onClick={aplicarCodigo}>Aplicar</Button>
+                </div>
+                {desc && <p className={`text-sm font-bold ${desc.ok ? 'text-exito' : 'text-error'}`}>{desc.mensaje}</p>}
+                <p className="text-xs text-bosque/70">Es el código que aparece debajo del QR de tu entrada.</p>
+              </div>
+            )}
             <DatosComprador />
             <MetodoPago valor={metodo} onChange={setMetodo} conMP={conMP} />
             <div className="space-y-1 border-t border-secundario pt-3 text-sm">
               <p className="flex justify-between"><span>{cantBolsa} × {bolsa.nombre}</span><span>{pesos(cantBolsa * bolsa.precio_base)}</span></p>
               {totalExtras > 0 && <p className="flex justify-between"><span>Extras</span><span>{pesos(totalExtras)}</span></p>}
+              {descuento > 0 && <p className="flex justify-between font-bold text-exito"><span>Descuento con entrada</span><span>− {pesos(descuento)}</span></p>}
               <p className="flex items-baseline justify-between pt-1"><span className="text-base font-bold">Total</span><span className="font-display text-3xl font-bold">{pesos(total)}</span></p>
             </div>
             {error && <Alerta tipo="error">{error}</Alerta>}

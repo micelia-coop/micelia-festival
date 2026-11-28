@@ -38,3 +38,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 }
 
 export const useConfig = () => useContext(ConfigCtx)
+
+/** Porcentaje de descuento en la Bolsa con la entrada de la tarde (null = no hay). */
+export function pctDescuentoBolsa(c: { bolsa: { descuento_entrada_pct?: string | number | null } }): number | null {
+  const n = Number(String(c.bolsa.descuento_entrada_pct ?? '').replace(',', '.'))
+  return Number.isFinite(n) && n > 0 ? n : null
+}

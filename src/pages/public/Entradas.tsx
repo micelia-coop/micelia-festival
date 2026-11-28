@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DatosComprador, irAMercadoPago, MetodoPago, type Metodo } from '../../components/Checkout'
 import { Alerta, Button, Card, Spinner, Titulo } from '../../components/ui'
-import { useConfig } from '../../lib/config'
+import { pctDescuentoBolsa, useConfig } from '../../lib/config'
 import { pesos } from '../../lib/format'
 import { rpc } from '../../lib/supabase'
 import type { TipoEntrada } from '../../lib/types'
@@ -83,6 +83,7 @@ export default function Entradas() {
                   <ul className="mt-2 space-y-1 text-sm font-semibold">
                     {t.incluye_almuerzo && <li>🥟 Incluye vale de almuerzo de La Tregua</li>}
                     {t.incluye_festival && <li>🌿 Incluye el festival de la tarde</li>}
+                    {t.descuento_bolsa && pctDescuentoBolsa(config) && <li>🎁 {pctDescuentoBolsa(config)}% de descuento en la Bolsa Ritual (online o en el festival)</li>}
                   </ul>
                   {abiertas && !agotada && (
                     <div className="mt-4 flex items-center gap-3" role="group" aria-label={`Cantidad de ${t.nombre}`}>

@@ -18,7 +18,7 @@ export type Sitio = {
 
 export type Config = {
   festival: Festival; pago: Pago; ventas: Ventas; desafio: DesafioCfg; faq: Faq
-  bolsa: { direccion_petruca?: string; titulo?: string; bajada?: string }; canje: { fecha?: string; desde?: string; hasta?: string }
+  bolsa: { direccion_petruca?: string; titulo?: string; bajada?: string; descuento_entrada_pct?: string | number | null }; canje: { fecha?: string; desde?: string; hasta?: string }
   sitio: Sitio
   propuesta?: unknown
 }
@@ -26,7 +26,7 @@ export type Config = {
 export type TipoEntrada = {
   id: string; nombre: string; descripcion: string | null; precio: number; cupo: number | null
   restantes: number | null; incluye_almuerzo: boolean; incluye_festival: boolean; valor_canje: number; orden: number
-  pregunta_mat: boolean
+  pregunta_mat: boolean; descuento_bolsa?: boolean
 }
 
 export type Marca = {
@@ -47,7 +47,7 @@ export type Producto = {
 export type PedidoEstado = 'pendiente' | 'comprobante_enviado' | 'pagado' | 'rechazado' | 'vencido' | 'cancelado'
 
 export type PedidoPublico = {
-  codigo: string; token: string; tipo: 'entrada' | 'bolsa'; nombre: string; total: number
+  codigo: string; token: string; tipo: 'entrada' | 'bolsa'; nombre: string; total: number; descuento?: number; descuento_entrada?: string | null
   metodo_pago: 'transferencia' | 'efectivo' | 'mercadopago'; estado: PedidoEstado; vence_at: string | null
   tiene_comprobante: boolean; es_regalo: boolean; regalo_para: string | null
   entrega: 'retiro_petruca' | 'retiro_festival' | null; entregado: boolean; created_at: string
@@ -59,9 +59,10 @@ export type PedidoPublico = {
 export type EntradaPublica = {
   token: string; codigo_corto: string; titular_nombre: string; activa: boolean
   ingreso_at: string | null; almuerzo_at: string | null; trae_mat: boolean | null
-  tipo: { nombre: string; descripcion: string | null; incluye_almuerzo: boolean; incluye_festival: boolean; valor_canje: number; pregunta_mat: boolean }
+  tipo: { nombre: string; descripcion: string | null; incluye_almuerzo: boolean; incluye_festival: boolean; valor_canje: number; pregunta_mat: boolean; descuento_bolsa?: boolean }
   pedido: { codigo: string; estado: PedidoEstado; metodo_pago: string }
   canje: { puesto: string; at: string } | null
+  descuento_bolsa_usado?: boolean
 }
 
 export const COLS_MARCA_PUBLICA =

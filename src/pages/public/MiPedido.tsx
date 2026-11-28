@@ -61,6 +61,7 @@ export default function MiPedido() {
             </li>
           ))}
         </ul>
+        {(p.descuento ?? 0) > 0 && <p className="flex justify-between py-1 text-exito"><span>🎁 Descuento con entrada {p.descuento_entrada}</span><span className="font-bold">− {pesos(p.descuento!)}</span></p>}
         <p className="mt-2 flex justify-between border-t-2 border-bosque pt-2 text-lg font-bold"><span>Total</span><span>{pesos(p.total)}</span></p>
         {p.tipo === 'bolsa' && (
           <div className="mt-3 space-y-1 text-sm">
