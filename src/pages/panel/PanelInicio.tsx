@@ -58,13 +58,6 @@ export default function PanelInicio() {
               </Card>
             ))}
           </section>
-          <Card>
-            <h2 className="text-xl font-bold">Capacidad de canje</h2>
-            <p className="mt-1">Entradas canjeables vendidas o reservadas: <strong>{m.capacidad_canje.entradas_canjeables}</strong> · Cupos en puestos: <strong>{m.capacidad_canje.sin_tope ? 'sin tope' : m.capacidad_canje.cupos}</strong> · Canjes hechos: <strong>{m.canjes}</strong></p>
-            {!m.capacidad_canje.sin_tope && m.capacidad_canje.cupos < m.capacidad_canje.entradas_canjeables && (
-              <div className="mt-2"><Alerta tipo="error">⚠️ Faltan {m.capacidad_canje.entradas_canjeables - m.capacidad_canje.cupos} lugares de canje. Sumá puestos o puestos sin tope.</Alerta></div>
-            )}
-          </Card>
           {m.efectivo_puerta > 0 && <Card><h2 className="font-bold">Efectivo cobrado en puerta</h2><p className="text-3xl font-bold">{pesos(m.efectivo_puerta)}</p></Card>}
         </>
       )}

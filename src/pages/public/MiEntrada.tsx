@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import QrCode from '../../components/QrCode'
 import { Alerta, Spinner } from '../../components/ui'
 import { useConfig } from '../../lib/config'
-import { diaLocal, fechaLarga, hora, pesos } from '../../lib/format'
+import { diaLocal, fechaLarga, hora } from '../../lib/format'
 import { rpc } from '../../lib/supabase'
 import type { EntradaPublica } from '../../lib/types'
 import { origen } from '../../lib/whatsapp'
@@ -51,9 +51,6 @@ export default function MiEntrada() {
         <ul className="list-disc space-y-1 pl-5 text-sm">
           <li>Mostrá este QR en la puerta para registrar tu ingreso.</li>
           {e.tipo.incluye_almuerzo && <li>En La Tregua, mostralo para retirar tu almuerzo (bebida + tapeo).</li>}
-          {e.tipo.valor_canje > 0
-            ? <li>Canjeala <strong>entera, en un solo puesto</strong>, por algo de hasta {pesos(e.tipo.valor_canje)}. Si elegís algo más caro, pagás la diferencia al puesto.</li>
-            : <li>Esta entrada no es canjeable: paga la actividad de la mañana.</li>}
           <li>Subí el brillo de la pantalla para que se lea mejor. 🌞</li>
         </ul>
       </div>

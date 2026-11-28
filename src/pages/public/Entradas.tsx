@@ -83,7 +83,6 @@ export default function Entradas() {
                   <ul className="mt-2 space-y-1 text-sm font-semibold">
                     {t.incluye_almuerzo && <li>🥟 Incluye vale de almuerzo de La Tregua</li>}
                     {t.incluye_festival && <li>🌿 Incluye el festival de la tarde</li>}
-                    <li>{t.valor_canje > 0 ? `🔁 100% canjeable por ${pesos(t.valor_canje)} en un puesto` : '✋ No es canjeable (paga la actividad de la mañana)'}</li>
                   </ul>
                   {abiertas && !agotada && (
                     <div className="mt-4 flex items-center gap-3" role="group" aria-label={`Cantidad de ${t.nombre}`}>

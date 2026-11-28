@@ -50,7 +50,6 @@ export default function PostularNivel() {
       ['Necesita para la actividad', g('actividad_necesita')],
       ['Ofrece en el stand', g('stand_ofrece')],
       ['Electricidad', g('electricidad')],
-      ['Ofrecería para el canje de la entrada', g('canje')],
       ['Comentarios', g('comentarios')],
     ]
     const mensaje = [
@@ -128,7 +127,6 @@ export default function PostularNivel() {
             <Field label="¿Necesitás electricidad?">
               <Select name="electricidad" defaultValue="No"><option>No</option><option>Sí</option><option>No sé todavía</option></Select>
             </Field>
-            <Field label="¿Qué ofrecerías para el canje de la entrada?" hint="La entrada de la tarde es 100% canjeable en un puesto"><Textarea name="canje" rows={2} /></Field>
           </>}
           {i > 0 && <Field label="Regalo para el sorteo (opcional)"><Input name="premio" /></Field>}
           <Field label="Comentarios"><Textarea name="comentarios" rows={2} /></Field>

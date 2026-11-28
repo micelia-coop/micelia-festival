@@ -110,9 +110,6 @@ export default function Registro() {
 
         <Card className="space-y-3">
           <h2 className="text-xl font-bold">Para el festival</h2>
-          <Field label="¿Qué ofrecés para el canje de la entrada?" hint="La entrada de la tarde es 100% canjeable en un puesto. Contanos qué producto, servicio o actividad ofrecerías a cambio.">
-            <Textarea name="canje_oferta" defaultValue={x.canje_oferta ?? ''} />
-          </Field>
           <Field label="Medios de pago que aceptás" hint="Ej: efectivo, transferencia, Mercado Pago"><Input name="medios_pago" defaultValue={x.medios_pago ?? ''} /></Field>
           <Field label="¿Qué necesitás para tu puesto?" hint="Ej: mesa, silla, enchufe, sombra"><Textarea name="necesidades" rows={2} defaultValue={x.necesidades ?? ''} /></Field>
           <Field label="Comentarios"><Textarea name="comentarios" rows={2} defaultValue={x.comentarios ?? ''} /></Field>
